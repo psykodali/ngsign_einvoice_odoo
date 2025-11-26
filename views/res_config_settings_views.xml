@@ -19,16 +19,12 @@
                                 </div>
                                 <div class="content-group mt16">
                                     <div class="row mt8">
-                                        <label for="ngsign_api_url" class="col-3 o_light_label"/>
-                                        <field name="ngsign_api_url" class="col-9"/>
+                                        <label for="ngsign_api_einvoice_url" class="col-3 o_light_label"/>
+                                        <field name="ngsign_api_einvoice_url" class="col-9"/>
                                     </div>
                                     <div class="row mt8">
-                                        <label for="ngsign_login" class="col-3 o_light_label"/>
-                                        <field name="ngsign_login" class="col-9"/>
-                                    </div>
-                                    <div class="row mt8">
-                                        <label for="ngsign_password" class="col-3 o_light_label"/>
-                                        <field name="ngsign_password" password="True" class="col-9"/>
+                                        <label for="ngsign_bearer_token" class="col-3 o_light_label"/>
+                                        <field name="ngsign_bearer_token" password="True" class="col-9"/>
                                     </div>
                                     <div class="row mt8">
                                         <label for="ngsign_passphrase" class="col-3 o_light_label"/>

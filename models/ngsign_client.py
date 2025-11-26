@@ -5,47 +5,15 @@ from odoo import _
 from odoo.exceptions import UserError
 
 class NGSignClient:
-    def __init__(self, api_url, login, password):
-        self.api_url = api_url.rstrip('/')
-        self.login = login
-        self.password = password
-        self.token = None
+    def __init__(self, api_url, token):
+        self.api_url = f"{api_url.rstrip('/')}/server"
+        self.token = token
 
     def _get_headers(self):
-        if not self.token:
-            self._authenticate()
         return {
             'Authorization': f'Bearer {self.token}',
             'Content-Type': 'application/json'
         }
-
-    def _authenticate(self):
-        """
-        Authenticate with NGSign. 
-        Note: Documentation suggests token is generated via Web App.
-        We will try a standard endpoint, but if it fails, we rely on a manually provided token if we add that field later.
-        For now, we'll assume there's a way to get it or the user puts it in the password field if it's a long-lived token?
-        No, let's assume a standard /login endpoint exists for API users.
-        """
-        # Placeholder for authentication logic
-        # If we don't have a specific endpoint, we might need to ask the user to provide the token directly.
-        # For this implementation, I will assume the user might provide the token in the 'password' field 
-        # if the login is empty, OR we try to hit an auth endpoint.
-        # Let's try to hit /api/login or similar if we were running it, but here we just write the code.
-        # I'll implement a basic POST /login request.
-        url = f"{self.api_url}/login" 
-        try:
-            payload = {'username': self.login, 'password': self.password}
-            # response = requests.post(url, json=payload)
-            # response.raise_for_status()
-            # self.token = response.json().get('token') or response.json().get('accessToken')
-            # For now, since we can't verify, let's assume the password IS the token if login is not provided?
-            # Or better, let's assume the user puts the token in the password field for simplicity if auto-auth isn't documented.
-            # BUT, the plan said Login/Password.
-            # Let's assume there is a /login endpoint.
-            pass
-        except Exception as e:
-            raise UserError(_("Authentication failed: %s") % str(e))
 
     def create_transaction_seal(self, invoices_payload, passphrase):
         """

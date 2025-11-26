@@ -16,14 +16,13 @@ class AccountMove(models.Model):
 
     def _get_ngsign_client(self):
         params = self.env['ir.config_parameter'].sudo()
-        api_url = params.get_param('ngsign.api_url')
-        login = params.get_param('ngsign.login')
-        password = params.get_param('ngsign.password')
+        api_url = params.get_param('ngsign.api_einvoice_url')
+        token = params.get_param('ngsign.bearer_token')
         
-        if not api_url or not login or not password:
+        if not api_url or not token:
             raise UserError(_("NGSign configuration is missing. Please check Settings."))
             
-        return NGSignClient(api_url, login, password)
+        return NGSignClient(api_url, token)
 
     def _prepare_ngsign_invoice_payload(self):
         """
