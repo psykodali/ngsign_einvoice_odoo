@@ -1,45 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="res_config_settings_view_form" model="ir.ui.view">
-        <field name="name">res.config.settings.view.form.inherit.ngsign</field>
-        <field name="model">res.config.settings</field>
-        <field name="inherit_id" ref="account.res_config_settings_view_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//div[@data-key='account']" position="inside">
-                <h2>NGSign e-invoice</h2>
-                <div class="row mt16 o_settings_container" id="ngsign_settings">
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label for="ngsign_api_url"/>
-                            <field name="ngsign_api_url"/>
+    <data>
+        <record id="res_config_settings_view_form" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.ngsign</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//app[@name='general_settings']" position="inside">
+                    <h2>NGSign e-invoice</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 o_setting_box">
+                            <div class="o_setting_left_pane">
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">NGSign Configuration</span>
+                                <div class="text-muted">
+                                    Configure NGSign API for e-invoicing and SEAL signing
+                                </div>
+                                <div class="content-group mt16">
+                                    <div class="row mt8">
+                                        <label for="ngsign_api_url" class="col-3 o_light_label"/>
+                                        <field name="ngsign_api_url" class="col-9"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_login" class="col-3 o_light_label"/>
+                                        <field name="ngsign_login" class="col-9"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_password" class="col-3 o_light_label"/>
+                                        <field name="ngsign_password" password="True" class="col-9"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_passphrase" class="col-3 o_light_label"/>
+                                        <field name="ngsign_passphrase" password="True" class="col-9"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_signer_email" class="col-3 o_light_label"/>
+                                        <field name="ngsign_signer_email" class="col-9"/>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label for="ngsign_login"/>
-                            <field name="ngsign_login"/>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label for="ngsign_password"/>
-                            <field name="ngsign_password" password="True"/>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label for="ngsign_passphrase"/>
-                            <field name="ngsign_passphrase" password="True"/>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6 o_setting_box">
-                        <div class="o_setting_right_pane">
-                            <label for="ngsign_signer_email"/>
-                            <field name="ngsign_signer_email"/>
-                        </div>
-                    </div>
-                </div>
-            </xpath>
-        </field>
-    </record>
+                </xpath>
+            </field>
+        </record>
+    </data>
 </odoo>
