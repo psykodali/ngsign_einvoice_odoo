@@ -77,7 +77,8 @@ class AccountMove(models.Model):
         
         # 2. Items Mapping
         items = []
-        for line in self.invoice_line_ids.filtered(lambda l: not l.display_type):
+        # In Odoo 16+, display_type can be 'product'. We want to exclude sections and notes.
+        for line in self.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
             # VAT Rate (find tax with I-1602 or use first found amount)
             vat_tax = line.tax_ids.filtered(lambda t: t.teif_code == 'I-1602')
             vat_rate = vat_tax[0].amount if vat_tax else 0.0
