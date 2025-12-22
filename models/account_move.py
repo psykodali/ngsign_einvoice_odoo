@@ -169,19 +169,23 @@ class AccountMove(models.Model):
             pyt_code = self.invoice_payment_term_id.teif_code or 'I-121' # Default Immediate
             
             # Payment Means (Espèce, Chèque, Virement)
-            # This is not standard on Invoice in Odoo (usually on Payment). 
-            # We can default to Virement (I-135) if bank account is present, else Check or Cash.
-            # Or add a field to invoice. For now, let's infer.
             pai_means_code = 'I-135' # Virement
             
+            # Resolve Bank Account
+            # Priority: 1. Invoice specific bank (partner_bank_id)
+            #           2. Journal's bank account (if Bank Journal)
+            bank_account = self.partner_bank_id
+            if not bank_account and self.journal_id.type == 'bank' and self.journal_id.bank_account_id:
+                bank_account = self.journal_id.bank_account_id
+
             pyt_fii = None
-            if self.partner_bank_id:
+            if bank_account:
                 pyt_fii = {
                     'accountHolder': {
-                        'accountNumber': self.partner_bank_id.acc_number,
+                        'accountNumber': bank_account.acc_number,
                     },
                     'institutionIdentification': {
-                        'institutionName': self.partner_bank_id.bank_id.name or 'Bank',
+                        'institutionName': bank_account.bank_id.name or 'Bank',
                     }
                 }
 
@@ -205,8 +209,8 @@ class AccountMove(models.Model):
             'clientIdentifier': partner_vat,
             'currencyIdentifier': self.currency_id.name,
             'comments': [self.narration] if self.narration else [],
-            'accountNumber': self.partner_bank_id.acc_number if self.partner_bank_id else None,
-            'institutionName': self.partner_bank_id.bank_id.name if self.partner_bank_id and self.partner_bank_id.bank_id else None,
+            'accountNumber': bank_account.acc_number if 'bank_account' in locals() and bank_account else None,
+            'institutionName': bank_account.bank_id.name if 'bank_account' in locals() and bank_account and bank_account.bank_id else None,
             
             'clientDetails': {
                 'partnerIdentifier': partner_vat,
