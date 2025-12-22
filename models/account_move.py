@@ -50,8 +50,8 @@ class AccountMove(models.Model):
             ], limit=1)
 
             if report_action:
-                # Use public method render_qweb_pdf
-                pdf_content, _ = report_action.sudo().render_qweb_pdf(self.ids)
+                # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
+                pdf_content, _ = self.env['ir.actions.report'].sudo()._render_qweb_pdf(report_action, self.ids)
                 pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
             else:
                 pdf_base64 = "REPORT_ACTION_NOT_FOUND"
