@@ -77,17 +77,29 @@ class AccountMove(models.Model):
         items = []
         # In Odoo 16+, display_type can be 'product'. We want to exclude sections and notes.
         for line in self.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
-            # VAT Rate (find tax with I-1602 or use first found amount)
-            vat_tax = line.tax_ids.filtered(lambda t: t.teif_code == 'I-1602')
-            vat_rate = vat_tax[0].amount if vat_tax else 0.0
-            if not vat_tax and line.tax_ids:
-                 # Fallback if not explicitly tagged, take the first one that looks like VAT
-                 # Or just take the first one.
-                 vat_rate = line.tax_ids[0].amount
+            # VAT Rate and Taxes Logic
+            # 1. Identify Primary VAT (I-1602)
+            # 2. All other taxes (including secondary VATs or non-VATs) go to 'taxes' list
+            
+            all_taxes = line.tax_ids
+            vat_taxes = all_taxes.filtered(lambda t: t.teif_code == 'I-1602')
+            taxes_with_codes = all_taxes.filtered(lambda t: t.teif_code)
+            
+            primary_vat_tax = None
+            if vat_taxes:
+                primary_vat_tax = vat_taxes[0]
+            elif not taxes_with_codes and all_taxes:
+                # Fallback: if no codes configured at all, assume first tax is VAT
+                primary_vat_tax = all_taxes[0]
+            
+            vat_rate = primary_vat_tax.amount if primary_vat_tax else 0.0
 
-            # Other taxes (FODEC, DC, etc.)
+            # Other taxes (FODEC, DC, etc. OR secondary VATs)
             other_taxes = []
-            for tax in line.tax_ids.filtered(lambda t: t.teif_code != 'I-1602'):
+            for tax in all_taxes:
+                if tax == primary_vat_tax:
+                    continue
+                
                 other_taxes.append({
                     'taxTypeName': {
                         'code': tax.teif_code or 'I-1606', # Default to Autre
@@ -173,10 +185,17 @@ class AccountMove(models.Model):
             
             # Resolve Bank Account
             # Priority: 1. Invoice specific bank (partner_bank_id)
-            #           2. Journal's bank account (if Bank Journal)
+            #           2. Journal's bank account (if set)
+            #           3. Company's first bank account
             bank_account = self.partner_bank_id
-            if not bank_account and self.journal_id.type == 'bank' and self.journal_id.bank_account_id:
+            if not bank_account and self.journal_id.bank_account_id:
                 bank_account = self.journal_id.bank_account_id
+            
+            if not bank_account:
+                 # Fallback to the first bank account of the company
+                 company_banks = self.company_id.partner_id.bank_ids
+                 if company_banks:
+                     bank_account = company_banks[0]
 
             pyt_fii = None
             if bank_account:
@@ -201,19 +220,23 @@ class AccountMove(models.Model):
                 'pytFii': pyt_fii
             })
 
+        # Clean Company VAT (Issuer)
+        company_vat = self.company_id.vat or ''
+        company_vat = company_vat.upper().replace('TN', '').strip()
+
         # Construct TEIF Invoice object
         teif_invoice = {
             'documentIdentifier': self.name,
             'invoiceDate': self.invoice_date.isoformat() if self.invoice_date else fields.Date.today().isoformat(),
             'documentType': teif_doc_type,
-            'clientIdentifier': partner_vat,
+            'clientIdentifier': company_vat, # Issuer Tax ID
             'currencyIdentifier': self.currency_id.name,
             'comments': [self.narration] if self.narration else [],
             'accountNumber': bank_account.acc_number if 'bank_account' in locals() and bank_account else None,
             'institutionName': bank_account.bank_id.name if 'bank_account' in locals() and bank_account and bank_account.bank_id else None,
             
             'clientDetails': {
-                'partnerIdentifier': partner_vat,
+                'partnerIdentifier': partner_vat, # Customer Tax ID
                 'partnerName': self.partner_id.name,
                 'address': {
                     'description': self.partner_id.contact_address.replace('\n', ' ') if self.partner_id.contact_address else '',
