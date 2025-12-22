@@ -41,7 +41,18 @@ class AccountMove(models.Model):
         self.ensure_one()
         
         # Generate PDF report
-        report_action = self.env.ref('account.account_invoices')
+        # Try to find the report action dynamically to avoid "Record does not exist" errors
+        report_action = self.env['ir.actions.report'].search([
+            ('model', '=', 'account.move'),
+            ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+        ], limit=1)
+        
+        if not report_action:
+             try:
+                 report_action = self.env.ref('account.account_invoices')
+             except ValueError:
+                 raise UserError(_("Invoice Report not found. Please ensure 'account.report_invoice_with_payments' exists."))
+
         pdf_content, _ = report_action._render_qweb_pdf(self.ids[0])
         pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
 
