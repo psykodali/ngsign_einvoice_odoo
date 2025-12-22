@@ -43,20 +43,18 @@ class AccountMove(models.Model):
         # Generate PDF report
         pdf_base64 = ""
         try:
-            # Try to find the report action dynamically
-            report_action = self.env['ir.actions.report'].sudo()._get_report_from_name('account.report_invoice_with_payments')
-            
-            if not report_action:
-                report_action = self.env['ir.actions.report'].sudo().search([
-                    ('model', '=', 'account.move'),
-                    ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
-                ], limit=1)
+            # Find report action using search to be safe
+            report_action = self.env['ir.actions.report'].sudo().search([
+                ('model', '=', 'account.move'),
+                ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+            ], limit=1)
 
             if report_action:
-                pdf_content, _ = report_action.sudo()._render_qweb_pdf(self.ids)
+                # Use public method render_qweb_pdf
+                pdf_content, _ = report_action.sudo().render_qweb_pdf(self.ids)
                 pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
             else:
-                pdf_base64 = "REPORT_ACTION_NOT_FOUND_IN_ODOO"
+                pdf_base64 = "REPORT_ACTION_NOT_FOUND"
                 
         except Exception as e:
             # If PDF generation fails, we still want to see the JSON data mapping
