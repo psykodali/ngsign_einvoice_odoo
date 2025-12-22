@@ -253,7 +253,7 @@ class AccountMove(models.Model):
             'documentIdentifier': self.name,
             'invoiceDate': invoice_date_ts,
             'documentType': teif_doc_type,
-            'clientIdentifier': company_vat, # Issuer Tax ID
+            'clientIdentifier': partner_vat, # Customer Tax ID
             'currencyIdentifier': self.currency_id.name,
             'comments': [self.narration] if self.narration else [],
             'accountNumber': bank_account.acc_number if bank_account else None,
@@ -283,19 +283,26 @@ class AccountMove(models.Model):
         }
 
         # Construct NGInvoiceUpload object
+        # Fetch configuration from settings
+        params = self.env['ir.config_parameter'].sudo()
+        
         invoice_upload = {
             'invoiceFileB64': pdf_base64,
             'type': teif_doc_type,
             'clientEmail': self.partner_id.email,
             'invoiceTIEF': teif_invoice,
             'configuration': {
-                'qrPositionX': 10,
-                'qrPositionY': 10,
-                'qrPositionP': 0,
-                'labelPositionX': 150,
-                'labelPositionY': 10,
-                'labelPositionP': 0,
-                'allPages': True
+                'qrPositionX': int(params.get_param('ngsign.qr_position_x', 10)),
+                'qrPositionY': int(params.get_param('ngsign.qr_position_y', 10)),
+                'qrPositionP': int(params.get_param('ngsign.qr_position_p', 0)),
+                'qrRatio': float(params.get_param('ngsign.qr_ratio', 0.5)),
+                'textPositionX': int(params.get_param('ngsign.text_position_x', 40)),
+                'textPositionY': int(params.get_param('ngsign.text_position_y', 40)),
+                'textPage': int(params.get_param('ngsign.text_page', 0)),
+                'labelPositionX': int(params.get_param('ngsign.label_position_x', 150)),
+                'labelPositionY': int(params.get_param('ngsign.label_position_y', 10)),
+                'labelPositionP': int(params.get_param('ngsign.label_position_p', 0)),
+                'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
             }
         }
         

@@ -35,6 +35,9 @@
                                         <field name="ngsign_signer_email" class="col-9"/>
                                     </div>
                                     <div class="row mt16">
+                                        <button name="action_open_template_settings" string="eInvoice template settings" type="object" class="oe_link" icon="fa-arrow-right"/>
+                                    </div>
+                                    <div class="row mt16">
                                         <label for="ngsign_enable_debug_button" class="col-3 o_light_label"/>
                                         <field name="ngsign_enable_debug_button" class="col-9"/>
                                     </div>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_ngsign_template_settings_form" model="ir.ui.view">
+            <field name="name">ngsign.template.settings.form</field>
+            <field name="model">ngsign.template.settings</field>
+            <field name="arch" type="xml">
+                <form string="eInvoice Template Settings">
+                    <group>
+                        <group string="QR Code Position">
+                            <field name="qr_position_x"/>
+                            <field name="qr_position_y"/>
+                            <field name="qr_position_p"/>
+                            <field name="qr_ratio"/>
+                        </group>
+                        <group string="Text Position">
+                            <field name="text_position_x"/>
+                            <field name="text_position_y"/>
+                            <field name="text_page"/>
+                        </group>
+                        <group string="Label Position">
+                            <field name="label_position_x"/>
+                            <field name="label_position_y"/>
+                            <field name="label_position_p"/>
+                        </group>
+                        <group string="General">
+                            <field name="all_pages"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button string="Save" type="object" name="action_save" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_ngsign_template_settings" model="ir.actions.act_window">
+            <field name="name">eInvoice Template Settings</field>
+            <field name="res_model">ngsign.template.settings</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+    </data>
+</odoo>

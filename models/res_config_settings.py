@@ -11,3 +11,12 @@ class ResConfigSettings(models.TransientModel):
     ngsign_bearer_token = fields.Char(string='Bearer Token', config_parameter='ngsign.bearer_token')
     ngsign_passphrase = fields.Char(string='SEAL Passphrase', config_parameter='ngsign.passphrase', help='Passphrase for the SEAL certificate')
     ngsign_signer_email = fields.Char(string='Signer Email', config_parameter='ngsign.signer_email', help='Email of the delegated signer (optional)')
+
+    def action_open_template_settings(self):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'eInvoice Template Settings',
+            'res_model': 'ngsign.template.settings',
+            'view_mode': 'form',
+            'target': 'new',
+        }
