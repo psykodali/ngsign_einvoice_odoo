@@ -55,7 +55,9 @@ class AccountMove(models.Model):
 
             if report_action:
                 # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
-                pdf_content, _ = self.env['ir.actions.report'].sudo()._render_qweb_pdf(report_action, self.ids)
+                # Force language to partner's lang or French
+                lang = self.partner_id.lang or 'fr_FR'
+                pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, self.ids)
                 pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
             else:
                 pdf_base64 = "REPORT_ACTION_NOT_FOUND"
