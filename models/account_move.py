@@ -1,5 +1,6 @@
 import base64
 import re
+import json
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from .ngsign_client import NGSignClient
@@ -14,6 +15,13 @@ class AccountMove(models.Model):
         ('signed', 'Signed'),
         ('error', 'Error')
     ], string='NGSign Status', default='draft', copy=False)
+
+    ngsign_show_debug_button = fields.Boolean(compute='_compute_show_debug_button')
+
+    def _compute_show_debug_button(self):
+        enable_debug = self.env['ir.config_parameter'].sudo().get_param('ngsign.enable_debug_button')
+        for move in self:
+            move.ngsign_show_debug_button = bool(enable_debug)
 
     def _get_ngsign_client(self):
         params = self.env['ir.config_parameter'].sudo()
@@ -302,3 +310,30 @@ class AccountMove(models.Model):
                 
         except Exception as e:
             raise UserError(_("Failed to check status: %s") % str(e))
+
+    def action_generate_debug_json(self):
+        """
+        Generate a debug JSON payload for the current invoice.
+        """
+        self.ensure_one()
+        try:
+            payload = self._prepare_ngsign_invoice_payload()
+            json_data = json.dumps(payload, indent=4, ensure_ascii=False)
+            
+            # Create attachment
+            attachment = self.env['ir.attachment'].create({
+                'name': f'ngsign_debug_{self.name}.json',
+                'type': 'binary',
+                'datas': base64.b64encode(json_data.encode('utf-8')),
+                'mimetype': 'application/json',
+                'res_model': 'account.move',
+                'res_id': self.id,
+            })
+            
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/web/content/{attachment.id}?download=true',
+                'target': 'self',
+            }
+        except Exception as e:
+            raise UserError(_("Failed to generate debug JSON: %s") % str(e))

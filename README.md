@@ -46,10 +46,9 @@ This module integrates Odoo with the **NGSign** platform to enable electronic in
     -   Once processed by TTN, the status will change to **"Signed"**.
     -   The signed PDF (containing the TTN QR code) will be automatically downloaded and attached to the invoice.
 
-### Debugging (Developer Mode)
-1.  Activate **Developer Mode**.
-2.  Go to **Accounting > Configuration > Settings > NGSign e-invoice**.
-3.  Click **Generate Debug JSON (Last Invoice)** to download the generated JSON payload for inspection.
+### Debugging
+1.  **Enable Debug Mode**: Go to **Accounting > Configuration > Settings > NGSign e-invoice** and check **Enable Debug Button**.
+2.  **Generate JSON**: Open any Customer Invoice. Click the **"Generate Debug JSON"** button in the header to download the payload.
 
 ## Author
 
