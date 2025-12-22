@@ -41,20 +41,26 @@ class AccountMove(models.Model):
         self.ensure_one()
         
         # Generate PDF report
-        # Try to find the report action dynamically to avoid "Record does not exist" errors
-        report_action = self.env['ir.actions.report'].search([
-            ('model', '=', 'account.move'),
-            ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
-        ], limit=1)
-        
-        if not report_action:
-             try:
-                 report_action = self.env.ref('account.account_invoices')
-             except ValueError:
-                 raise UserError(_("Invoice Report not found. Please ensure 'account.report_invoice_with_payments' exists."))
+        pdf_base64 = ""
+        try:
+            # Try to find the report action dynamically
+            report_action = self.env['ir.actions.report'].sudo()._get_report_from_name('account.report_invoice_with_payments')
+            
+            if not report_action:
+                report_action = self.env['ir.actions.report'].sudo().search([
+                    ('model', '=', 'account.move'),
+                    ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+                ], limit=1)
 
-        pdf_content, _ = report_action._render_qweb_pdf(self.ids[0])
-        pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+            if report_action:
+                pdf_content, _ = report_action.sudo()._render_qweb_pdf(self.ids)
+                pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+            else:
+                pdf_base64 = "REPORT_ACTION_NOT_FOUND_IN_ODOO"
+                
+        except Exception as e:
+            # If PDF generation fails, we still want to see the JSON data mapping
+            pdf_base64 = f"PDF_GENERATION_FAILED: {str(e)}"
 
         # 1. Header Data
         # Map move_type to TEIF codes
