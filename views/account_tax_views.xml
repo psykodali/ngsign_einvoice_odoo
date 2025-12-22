@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_tax_form_inherit_ngsign" model="ir.ui.view">
+            <field name="name">account.tax.form.inherit.ngsign</field>
+            <field name="model">account.tax</field>
+            <field name="inherit_id" ref="account.view_tax_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="teif_code"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
