@@ -275,7 +275,7 @@ class AccountMove(models.Model):
             'invoiceTotalWithTax': self.amount_total,
             'invoiceTotalTax': self.amount_tax,
             'stampTax': stamp_tax,
-            'invoiceTotalinLetters': self.currency_id.amount_to_text(self.amount_total),
+            'invoiceTotalinLetters': self.currency_id.with_context(lang='fr_FR').amount_to_text(self.amount_total),
             
             'paymentDetails': payment_details
         }
