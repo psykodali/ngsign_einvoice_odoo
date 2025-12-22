@@ -13,7 +13,6 @@ The integration connects Odoo with the NGSign API to perform the following opera
 ## 2. Authentication
 
 -   **Method**: JWT (JSON Web Token) Bearer Token.
--   **Credentials**: Uses `Login` and `Password` stored in Odoo System Parameters.
 -   **Endpoint**: `POST /login` (Configurable base URL).
 -   **Header**: `Authorization: Bearer <token>` is added to all subsequent requests.
 
@@ -65,35 +64,3 @@ Downloads the final PDF file which includes the TTN QR code (2D-Doc) and referen
 
 -   **Endpoint**: `GET /protected/invoice/pdf/{invoice_uuid}`
 -   **Response**: Binary PDF content.
-
-## 4. Data Mapping (TEIF)
-
-The integration maps Odoo `account.move` fields to the **Tunisian Electronic Invoice Format (TEIF)** JSON structure.
-
-| Odoo Field | TEIF Field | Description |
-| :--- | :--- | :--- |
-| `name` | `documentIdentifier` | Invoice Number |
-| `invoice_date` | `invoiceDate` | Date of issuance |
-| `partner_id.name` | `clientDetails.partnerName` | Client Name |
-| `partner_id.vat` | `clientDetails.partnerIdentifier` | Client Tax ID (Matricule Fiscal) |
-| `amount_untaxed` | `invoiceTotalWithoutTax` | Total amount excluding tax |
-| `amount_tax` | `invoiceTotalTax` | Total tax amount |
-| `amount_total` | `invoiceTotalWithTax` | Total amount including tax |
-
-**Invoice Lines (`items`):**
--   `name` -> `name`
--   `product_id.default_code` -> `code`
--   `quantity` -> `quantity`
--   `price_unit` -> `unitPrice`
--   `price_subtotal` -> `totalPrice`
--   `tax_ids` -> `tvaRate` (Simplified mapping)
-
-## 5. Configuration Parameters
-
-The following parameters are stored in `ir.config_parameter`:
-
--   `ngsign.api_url`: Base URL of the API (e.g., `https://api.ng-sign.com`).
--   `ngsign.login`: API Username.
--   `ngsign.password`: API Password.
--   `ngsign.passphrase`: Passphrase for the SEAL certificate (required for `/seal` endpoint).
--   `ngsign.signer_email`: (Optional) Email for delegated signing flows.

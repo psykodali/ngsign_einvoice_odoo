@@ -8,6 +8,8 @@
         - Generate TEIF compliant e-invoices
         - Sign invoices using NGSign SEAL (Electronic Seal)
         - Automatically enrich PDF with TTN QR code and reference
+        - Manage TEIF Tax and Payment Term mappings
+        - Debug JSON payload generation
     """,
     'author': 'NGSIGN',
     'depends': ['account'],

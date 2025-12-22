@@ -18,22 +18,38 @@ This module integrates Odoo with the **NGSign** platform to enable electronic in
 
 ## Configuration
 
-1.  Go to **Settings > Invoicing**.
+### 1. General Settings
+1.  Go to **Accounting > Configuration > Settings**.
 2.  Scroll down to the **NGSign e-invoice** section.
 3.  Enter your NGSign credentials:
-    -   **NGSign API URL**: The base URL for the NGSign API (default: `https://api.ng-sign.com`).
-    -   **Login**: Your NGSign username.
-    -   **Password**: Your NGSign password.
+    -   **NGSign API URL**: The base URL for the NGSign API (e.g., `https://api.ng-sign.com`).
+    -   **Bearer Token**: Your NGSign API Bearer Token.
     -   **SEAL Passphrase**: The passphrase for your SEAL certificate.
     -   **Signer Email**: (Optional) Email of the delegated signer.
 
+### 2. Tax Configuration
+1.  Go to **Accounting > Configuration > Taxes**.
+2.  Open each tax used in invoices (e.g., VAT 19%, FODEC).
+3.  Set the **TEIF Tax Code** field to the corresponding TEIF code (e.g., `I-1602` for VAT).
+
+### 3. Payment Terms Configuration
+1.  Go to **Accounting > Configuration > Payment Terms**.
+2.  Open your payment terms (e.g., Immediate Payment).
+3.  Set the **TEIF Condition Code** field (e.g., `I-121` for Immediate).
+
 ## Usage
 
+### Signing Invoices
 1.  **Create an Invoice**: Create and post a Customer Invoice as usual.
 2.  **Sign**: Click the **"Sign with NGSign"** button in the invoice header. The status will change to "Pending".
 3.  **Check Status**: Click the **"Check NGSign Status"** button to poll for updates.
     -   Once processed by TTN, the status will change to **"Signed"**.
     -   The signed PDF (containing the TTN QR code) will be automatically downloaded and attached to the invoice.
+
+### Debugging (Developer Mode)
+1.  Activate **Developer Mode**.
+2.  Go to **Accounting > Configuration > Settings > NGSign e-invoice**.
+3.  Click **Generate Debug JSON (Last Invoice)** to download the generated JSON payload for inspection.
 
 ## Author
 
