@@ -1,7 +1,11 @@
 import base64
 import re
 import json
+import logging
+from datetime import datetime
 from odoo import models, fields, api, _
+
+_logger = logging.getLogger(__name__)
 from odoo.exceptions import UserError
 from .ngsign_client import NGSignClient
 
@@ -176,6 +180,29 @@ class AccountMove(models.Model):
                 stamp_tax = abs(tax_line.amount_currency)
 
         # 4. Payment Details
+        # Resolve Bank Account (Unconditionally)
+        # Priority: 1. Invoice specific bank (partner_bank_id)
+        #           2. Journal's bank account (if set)
+        #           3. Company's first bank account
+        
+        # Use sudo() to ensure we can read bank account details regardless of user permissions
+        bank_account = self.partner_bank_id.sudo()
+        
+        _logger.info(f"NGSign Debug: partner_bank_id={bank_account}, acc_number={bank_account.acc_number if bank_account else 'None'}")
+        
+        if not bank_account and self.journal_id.bank_account_id:
+            bank_account = self.journal_id.bank_account_id.sudo()
+            _logger.info(f"NGSign Debug: Fallback to Journal Bank={bank_account}")
+        
+        if not bank_account:
+             # Fallback to the first bank account of the company
+             company_banks = self.company_id.partner_id.bank_ids.sudo()
+             if company_banks:
+                 bank_account = company_banks[0]
+                 _logger.info(f"NGSign Debug: Fallback to Company Bank={bank_account}")
+
+        _logger.info(f"NGSign Debug: Final Resolved Bank={bank_account}")
+
         payment_details = []
         if self.invoice_payment_term_id:
             pyt_code = self.invoice_payment_term_id.teif_code or 'I-121' # Default Immediate
@@ -183,20 +210,6 @@ class AccountMove(models.Model):
             # Payment Means (Espèce, Chèque, Virement)
             pai_means_code = 'I-135' # Virement
             
-            # Resolve Bank Account
-            # Priority: 1. Invoice specific bank (partner_bank_id)
-            #           2. Journal's bank account (if set)
-            #           3. Company's first bank account
-            bank_account = self.partner_bank_id
-            if not bank_account and self.journal_id.bank_account_id:
-                bank_account = self.journal_id.bank_account_id
-            
-            if not bank_account:
-                 # Fallback to the first bank account of the company
-                 company_banks = self.company_id.partner_id.bank_ids
-                 if company_banks:
-                     bank_account = company_banks[0]
-
             pyt_fii = None
             if bank_account:
                 pyt_fii = {
@@ -225,15 +238,24 @@ class AccountMove(models.Model):
         company_vat = company_vat.upper().replace('TN', '').strip()
 
         # Construct TEIF Invoice object
+        # Convert date to Unix timestamp (seconds)
+        invoice_date_ts = 0
+        if self.invoice_date:
+            # Convert date to datetime at midnight
+            dt = datetime.combine(self.invoice_date, datetime.min.time())
+            invoice_date_ts = int(dt.timestamp())
+        else:
+            invoice_date_ts = int(datetime.now().timestamp())
+
         teif_invoice = {
             'documentIdentifier': self.name,
-            'invoiceDate': self.invoice_date.isoformat() if self.invoice_date else fields.Date.today().isoformat(),
+            'invoiceDate': invoice_date_ts,
             'documentType': teif_doc_type,
             'clientIdentifier': company_vat, # Issuer Tax ID
             'currencyIdentifier': self.currency_id.name,
             'comments': [self.narration] if self.narration else [],
-            'accountNumber': bank_account.acc_number if 'bank_account' in locals() and bank_account else None,
-            'institutionName': bank_account.bank_id.name if 'bank_account' in locals() and bank_account and bank_account.bank_id else None,
+            'accountNumber': bank_account.acc_number if bank_account else None,
+            'institutionName': bank_account.bank_id.name if bank_account and bank_account.bank_id else None,
             
             'clientDetails': {
                 'partnerIdentifier': partner_vat, # Customer Tax ID
