@@ -2,7 +2,7 @@ import base64
 import re
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from odoo import models, fields, api, _
 
 _logger = logging.getLogger(__name__)
@@ -28,6 +28,37 @@ class AccountMove(models.Model):
     ], string='NGSign Status', default='draft', copy=False)
     
     ngsign_notify_owner = fields.Boolean(string='Notify Owner', default=lambda self: self.env['ir.config_parameter'].sudo().get_param('ngsign.notify_owner_default', 'True') == 'True', copy=False)
+    ngsign_last_check = fields.Datetime(string='Last NGSign Check', copy=False)
+
+    def read(self, fields=None, load='_classic_read'):
+        """
+        Override read to auto-check NGSign status when opening the form view.
+        We use a debounce of 60 seconds to avoid excessive API calls.
+        """
+        # Only check if reading a single record (likely form view)
+        if len(self) == 1:
+            try:
+                # Check eligibility: Not draft, cancelled, or fully signed (TTN Signed)
+                # We want to check for pending, signed (NGSign only), error, TTN_REJECTED
+                if self.ngsign_status not in ('draft', 'CANCELLED', 'TTN Signed'):
+                    should_check = False
+                    if not self.ngsign_last_check:
+                        should_check = True
+                    else:
+                        # Check if last check was more than 60 seconds ago
+                        diff = fields.Datetime.now() - self.ngsign_last_check
+                        if diff > timedelta(seconds=60):
+                            should_check = True
+                    
+                    if should_check:
+                        # Run status check
+                        # We use a new cursor or try/except to ensure read doesn't fail if API fails
+                        # But action_check_ngsign_status already handles errors gracefully (logs them)
+                        self.action_check_ngsign_status()
+            except Exception as e:
+                _logger.warning(f"Auto-check NGSign status failed in read(): {e}")
+
+        return super(AccountMove, self).read(fields, load)
 
     @api.onchange('partner_id')
     def _onchange_partner_id_ngsign(self):
@@ -485,6 +516,10 @@ class AccountMove(models.Model):
 
     def action_check_ngsign_status(self):
         self.ensure_one()
+        
+        # Update last check time
+        self.ngsign_last_check = fields.Datetime.now()
+        
         # We need at least one UUID. Preferably transaction UUID for public check.
         if not self.ngsign_transaction_uuid:
             return
