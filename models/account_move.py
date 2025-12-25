@@ -13,7 +13,8 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     ngsign_transaction_uuid = fields.Char(string='NGSign Transaction UUID', copy=False)
-    ngsign_ttn_reference = fields.Char(string='TTN Reference', copy=False, help="Unique reference returned by TTN after signing")
+    ngsign_ttn_reference = fields.Char(string='TTN eInvoice ID', copy=False, help="Unique reference returned by TTN after signing")
+    ngsign_ttn_qr_code = fields.Binary(string='TTN QR Code', copy=False, attachment=True)
     ngsign_status = fields.Selection([
         ('draft', 'Draft'),
         ('pending', 'Pending'),
@@ -442,6 +443,29 @@ class AccountMove(models.Model):
             if status == 'TTN_SIGNED':
                 self.ngsign_status = 'signed'
                 self.ngsign_ttn_reference = invoice_data.get('ttnReference')
+                
+                # Save TTN QR Code
+                qr_code_data = invoice_data.get('twoDocImage')
+                if qr_code_data:
+                    # API returns a list of bytes (integers) or base64 string?
+                    # Docs say "Byte[]". Usually in JSON this is a Base64 string or a list of ints.
+                    # If it's a list of ints, we need to convert to bytes then base64.
+                    # If it's already base64 string, we just save it.
+                    # Let's assume it might be a list of ints based on "Byte[]" description in some Java-like APIs,
+                    # but usually JSON APIs return Base64 strings for byte arrays.
+                    # Let's try to handle both or assume Base64 string first as it's standard for JSON.
+                    # If it's a list of ints: bytes(qr_code_data) -> base64.b64encode(...)
+                    
+                    try:
+                        if isinstance(qr_code_data, list):
+                            self.ngsign_ttn_qr_code = base64.b64encode(bytes(qr_code_data))
+                        else:
+                            # Assume it's already a base64 string or raw bytes?
+                            # If it's a string, it might be base64.
+                            self.ngsign_ttn_qr_code = qr_code_data
+                    except Exception as e:
+                        _logger.warning(f"Failed to process TTN QR Code: {e}")
+
                 # Download PDF
                 pdf_content = client.download_pdf(invoice_uuid)
                 
