@@ -17,7 +17,7 @@ async function actionSignNGSignJs(env, action) {
     }
 
     // Block UI with first message
-    ui.block({ message: _t("1- Preparing eInvoices") });
+    ui.block({ message: _t("Preparing your eInvoice(s)") });
 
     try {
         // Step 1: Prepare (Generate PDFs)
@@ -28,7 +28,7 @@ async function actionSignNGSignJs(env, action) {
         // In Odoo 16+ usually we unblock and block again or just update. 
         // Let's try unblocking and blocking to be safe and ensure message update.
         ui.unblock();
-        ui.block({ message: _t("2- Sending eInvoices for signature") });
+        ui.block({ message: _t("Sending eInvoice(s) for signature") });
 
         await orm.call("account.move", "action_ngsign_send", [activeIds]);
 

@@ -22,8 +22,8 @@
                 <page string="eInvoice Info" name="einvoice_info">
                     <group>
                         <group>
-                            <field name="ngsign_transaction_uuid" readonly="1" groups="base.group_no_one"/>
-                            <field name="ngsign_invoice_uuid" readonly="1" groups="base.group_no_one"/>
+                            <field name="ngsign_transaction_uuid" readonly="1" invisible="not ngsign_show_debug_button"/>
+                            <field name="ngsign_invoice_uuid" readonly="1" invisible="not ngsign_show_debug_button"/>
                             <field name="ngsign_ttn_reference" readonly="1" string="TTN eInvoice ID"/>
                             <field name="ngsign_ttn_qr_code" widget="image" readonly="1" invisible="not ngsign_ttn_qr_code"/>
                         </group>
