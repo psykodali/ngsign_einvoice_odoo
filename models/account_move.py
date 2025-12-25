@@ -270,9 +270,52 @@ class AccountMove(models.Model):
         if self.invoice_date:
             # Convert date to datetime at midnight
             dt = datetime.combine(self.invoice_date, datetime.min.time())
-            invoice_date_ts = int(dt.timestamp())
+            invoice_date_ts = int(dt.timestamp() * 1000)
         else:
-            invoice_date_ts = int(datetime.now().timestamp())
+            invoice_date_ts = int(datetime.now().timestamp() * 1000)
+
+        # 5. Global Taxes Aggregation
+        # We need to aggregate taxes by code and rate for the global 'taxes' list
+        # And calculate global tvaTax and tvaRate
+        
+        global_taxes_map = {} # Key: (code, rate), Value: {amount, base}
+        total_vat_amount = 0.0
+        
+        # Iterate over invoice lines to aggregate taxes
+        for line in self.invoice_line_ids.filtered(lambda l: l.display_type not in ('line_section', 'line_note')):
+            price_subtotal = line.price_subtotal
+            
+            for tax in line.tax_ids:
+                # Calculate tax amount for this line
+                # This is an approximation if multiple taxes are applied. 
+                # Ideally use tax_totals but mapping back to codes is hard.
+                # We'll use the tax rate to estimate line tax amount.
+                tax_amount = (price_subtotal * tax.amount) / 100
+                
+                if tax.teif_code == 'I-1602':
+                    total_vat_amount += tax_amount
+                else:
+                    key = (tax.teif_code or 'I-1606', str(tax.amount))
+                    if key not in global_taxes_map:
+                        global_taxes_map[key] = {'amount': 0.0, 'base': 0.0, 'name': tax.name}
+                    
+                    global_taxes_map[key]['amount'] += tax_amount
+                    global_taxes_map[key]['base'] += price_subtotal
+
+        global_taxes_list = []
+        for (code, rate), data in global_taxes_map.items():
+            global_taxes_list.append({
+                'code': code,
+                'taxRate': rate,
+                'amount': f"{data['amount']:.3f}",
+                'amountBase': f"{data['base']:.3f}"
+            })
+
+        # Determine global VAT rate (if uniform)
+        # If multiple VAT rates exist, what to put? Example says 0.0.
+        # Let's check if we have a single VAT rate.
+        vat_rates = self.invoice_line_ids.mapped('tax_ids').filtered(lambda t: t.teif_code == 'I-1602').mapped('amount')
+        global_tva_rate = vat_rates[0] if len(set(vat_rates)) == 1 else 0.0
 
         teif_invoice = {
             'documentIdentifier': self.name,
@@ -298,11 +341,14 @@ class AccountMove(models.Model):
             },
             
             'items': items,
+            'taxes': global_taxes_list,
             
             'invoiceTotalWithoutTax': self.amount_untaxed,
             'invoiceTotalWithTax': self.amount_total,
             'invoiceTotalTax': self.amount_tax,
             'stampTax': stamp_tax,
+            'tvaRate': global_tva_rate,
+            'tvaTax': total_vat_amount,
             'invoiceTotalinLetters': self.currency_id.with_context(lang='fr_FR').amount_to_text(self.amount_total),
             
             'paymentDetails': payment_details
