@@ -559,6 +559,7 @@ class AccountMove(models.Model):
                         'res_model': 'account.move',
                         'res_id': self.id,
                         'mimetype': 'application/pdf'
+                    })
                 except Exception as e:
                     _logger.error(f"Failed to download signed PDF: {e}")
                     self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
