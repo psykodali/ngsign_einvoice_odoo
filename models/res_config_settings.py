@@ -12,6 +12,7 @@ class ResConfigSettings(models.TransientModel):
     ngsign_passphrase = fields.Char(string='SEAL Passphrase', config_parameter='ngsign.passphrase', help='Passphrase for the SEAL certificate')
     ngsign_signer_email = fields.Char(string='Signer Email', config_parameter='ngsign.signer_email', help='Email of the delegated signer (optional)')
     ngsign_notify_owner_default = fields.Boolean(string='Notify Owner Default', config_parameter='ngsign.notify_owner_default', default=True, help='Default value for "Notify Owner" on invoices')
+    ngsign_debug_include_pdf = fields.Boolean(string='Include PDF in Debug', config_parameter='ngsign.debug_include_pdf', help='Include base64 PDF in debug JSON')
 
     def set_values(self):
         super(ResConfigSettings, self).set_values()
@@ -24,6 +25,7 @@ class ResConfigSettings(models.TransientModel):
         param.set_param('ngsign.signer_email', self.ngsign_signer_email or '')
         param.set_param('ngsign.notify_owner_default', str(self.ngsign_notify_owner_default))
         param.set_param('ngsign.enable_debug_button', str(self.ngsign_enable_debug_button))
+        param.set_param('ngsign.debug_include_pdf', str(self.ngsign_debug_include_pdf))
         
         # Log what we are saving
         import logging
@@ -42,6 +44,7 @@ class ResConfigSettings(models.TransientModel):
             ngsign_signer_email=param.get_param('ngsign.signer_email'),
             ngsign_notify_owner_default=param.get_param('ngsign.notify_owner_default', 'True') == 'True',
             ngsign_enable_debug_button=param.get_param('ngsign.enable_debug_button', 'False') == 'True',
+            ngsign_debug_include_pdf=param.get_param('ngsign.debug_include_pdf', 'False') == 'True',
         )
         return res
 

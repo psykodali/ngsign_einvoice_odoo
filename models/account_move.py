@@ -771,7 +771,16 @@ class AccountMove(models.Model):
             if cc_email:
                 full_payload['ccEmail'] = cc_email
 
-            json_data = json.dumps(full_payload, indent=4, ensure_ascii=False)
+            # Check if we should include PDF content
+            include_pdf = self.env['ir.config_parameter'].sudo().get_param('ngsign.debug_include_pdf', 'False') == 'True'
+            
+            if not include_pdf:
+                # Iterate and remove/replace PDF content to save space
+                for inv in full_payload.get('invoices', []):
+                    if 'fileContent' in inv:
+                        inv['fileContent'] = "PDF_CONTENT_OMITTED_BY_SETTING"
+            
+            json_data = json.dumps(full_payload, indent=4, default=str, ensure_ascii=False)
             
             # Create attachment
             name_suffix = self[0].name if len(self) == 1 else f"bulk_{len(self)}"

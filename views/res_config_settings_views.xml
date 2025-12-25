@@ -42,6 +42,10 @@
                                         <label for="ngsign_enable_debug_button" class="col-3 o_light_label"/>
                                         <field name="ngsign_enable_debug_button" class="col-9"/>
                                     </div>
+                                    <div class="row mt8" invisible="not ngsign_enable_debug_button">
+                                        <label for="ngsign_debug_include_pdf" class="col-3 o_light_label"/>
+                                        <field name="ngsign_debug_include_pdf" class="col-9"/>
+                                    </div>
                                 </div>
                             </div>
                         </div>
