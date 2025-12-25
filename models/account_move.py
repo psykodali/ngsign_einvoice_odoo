@@ -123,6 +123,10 @@ class AccountMove(models.Model):
                 if tax == primary_vat_tax:
                     continue
                 
+                # Exclude Stamp Tax (I-1601) as it is handled in stampTax field
+                if tax.teif_code == 'I-1601':
+                    continue
+                
                 # Calculate tax amount for this line item
                 # This is an approximation. Odoo stores tax amount on the line only if it's price_include=True or we compute it.
                 # line.price_total - line.price_subtotal gives total tax. But we need per tax.
@@ -138,10 +142,10 @@ class AccountMove(models.Model):
                 other_taxes.append({
                     'taxTypeName': {
                         'code': tax.teif_code or 'I-1606', # Default to Autre
-                        'value': current_tax_amount # Value should be the amount
+                        'value': str(current_tax_amount) # Value should be the amount
                     },
                     'taxDetails': {
-                        'taxRate': tax.amount
+                        'taxRate': str(tax.amount)
                     }
                 })
 
@@ -284,6 +288,9 @@ class AccountMove(models.Model):
                 
                 if tax.teif_code == 'I-1602':
                     total_vat_amount += tax_amount
+                elif tax.teif_code == 'I-1601':
+                    # Skip Stamp Tax in global taxes list as it has its own field
+                    continue
                 else:
                     key = (tax.teif_code or 'I-1606', str(tax.amount))
                     if key not in global_taxes_map:
