@@ -35,11 +35,11 @@
         <field name="name">Sign with NGSign</field>
         <field name="model_id" ref="account.model_account_move"/>
         <field name="binding_model_id" ref="account.model_account_move"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,form</field>
         <field name="state">code</field>
         <field name="code">
-            if records:
-                records.action_sign_ngsign()
+if records:
+    records.action_sign_ngsign()
         </field>
     </record>
 
@@ -47,11 +47,11 @@
         <field name="name">Generate Debug JSON</field>
         <field name="model_id" ref="account.model_account_move"/>
         <field name="binding_model_id" ref="account.model_account_move"/>
-        <field name="binding_view_types">list</field>
+        <field name="binding_view_types">list,form</field>
         <field name="state">code</field>
         <field name="code">
-            if records:
-                action = records.action_generate_debug_json()
+if records:
+    action = records.action_generate_debug_json()
         </field>
     </record>
 </odoo>
