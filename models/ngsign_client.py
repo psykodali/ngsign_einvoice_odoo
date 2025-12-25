@@ -57,12 +57,21 @@ class NGSignClient:
     def download_pdf(self, uuid):
         """
         Download the signed PDF.
+        Response is JSON with base64 encoded PDF in 'object' field.
         """
         url = f"{self.api_url}/protected/invoice/pdf/{uuid}"
         headers = self._get_headers()
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        return response.content # Returns bytes
+        
+        # Parse JSON response
+        data = response.json()
+        pdf_base64 = data.get('object')
+        
+        if not pdf_base64:
+            raise UserError(_("PDF content not found in response"))
+            
+        return base64.b64decode(pdf_base64)
 
     def get_transaction_details(self, uuid):
         """
