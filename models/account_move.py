@@ -23,7 +23,7 @@ class AccountMove(models.Model):
         ('TTN Signed', 'TTN Signed'),
         ('CANCELLED', 'Cancelled'),
         ('TTN_REJECTED', 'TTN Rejected'),
-        ('SIGNED', 'Signed (NGSign Only)'),
+        ('signed_ngsign', 'Signed (NGSign Only)'),
         ('error', 'Error')
     ], string='NGSign Status', default='draft', copy=False)
     
@@ -619,7 +619,7 @@ class AccountMove(models.Model):
                  # Signed by NGSign but not yet by TTN (or TTN process pending/failed without final status)
                  # If ttnErrorMessage is present, it might be a failure
                  if ttn_error:
-                     self.ngsign_status = 'SIGNED'
+                     self.ngsign_status = 'signed_ngsign'
                      self.message_post(body=_("NGSign Signed but TTN Error: %s") % ttn_error)
                  else:
                      # Just signed by NGSign, waiting for TTN? Or is SIGNED final for non-TTN?
