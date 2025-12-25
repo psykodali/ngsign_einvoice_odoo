@@ -294,15 +294,30 @@ class AccountMove(models.Model):
         document_references = []
              
         # 1. Previous Invoice (I-88) for Credit Notes
+        ref_value = None
+        ref_date = None
+
         if self.move_type == 'out_refund' and self.reversed_entry_id:
             # We need the TTN reference of the original invoice
             original_ttn_ref = self.reversed_entry_id.ngsign_ttn_reference
             if original_ttn_ref:
                 document_references.append({
-                    'refID': 'I-88', # Facture précédente
+                    'refID': 'I-88', # Référence TTN
                     'value': original_ttn_ref,
                     'date': self.reversed_entry_id.invoice_date.isoformat() if self.reversed_entry_id.invoice_date else None
                 })
+            
+            # Use original invoice details for I-89
+            ref_value = self.reversed_entry_id.name
+            ref_date = self.reversed_entry_id.invoice_date
+
+        # 2. Reference Invoice (I-89)
+        if ref_value:
+            document_references.append({
+                'refID': 'I-89', # Référence interne
+                'value': ref_value,
+                'date': ref_date.isoformat() if ref_date else None
+            })
 
         # Construct TEIF Invoice object
         # Convert date to Unix timestamp (seconds)
