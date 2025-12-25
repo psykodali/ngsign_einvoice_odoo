@@ -1,0 +1,290 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* ngsign_einvoice_odoo
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-25 22:00+0000\n"
+"PO-Revision-Date: 2025-12-25 22:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_transaction_uuid
+msgid "NGSign Transaction UUID"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_invoice_uuid
+msgid "NGSign Invoice UUID"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_ttn_reference
+msgid "TTN eInvoice ID"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_ttn_qr_code
+msgid "TTN QR Code"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_status
+msgid "NGSign Status"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__draft
+msgid "Draft"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__pending
+msgid "Pending"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__signed
+msgid "Signed"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__ttn_signed
+msgid "TTN Signed"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__cancelled
+msgid "Cancelled"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__ttn_rejected
+msgid "TTN Rejected"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__signed_ngsign
+msgid "Signed (NGSign Only)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__error
+msgid "Error"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_notify_owner
+msgid "Notify Owner"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_last_check
+msgid "Last NGSign Check"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "NGSign configuration is missing: %s. Please check Settings."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Failed to prepare PDF for invoice %s: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "SEAL Passphrase is missing in Settings."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Failed to sign invoice(s): %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Invoice signed but failed to download PDF: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Invoice signed but failed to download XML: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "NGSign signing failed/rejected. Status: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "NGSign transaction cancelled. Status: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "NGSign Signed but TTN Error: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Failed to check status: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Failed to generate debug JSON: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_api_einvoice_url
+msgid "NGSign API URL"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_enable_debug_button
+msgid "Developer options"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,help:ngsign_einvoice_odoo.field_res_config_settings__ngsign_enable_debug_button
+msgid "Show \"Generate Debug JSON\" button on invoices"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_bearer_token
+msgid "Bearer Token"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_passphrase
+msgid "SEAL Passphrase"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,help:ngsign_einvoice_odoo.field_res_config_settings__ngsign_passphrase
+msgid "Passphrase for the SEAL certificate"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_notify_owner_default
+msgid "Notify Owner Default"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,help:ngsign_einvoice_odoo.field_res_config_settings__ngsign_notify_owner_default
+msgid "Default value for \"Notify Owner\" on invoices"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/ngsign_client.py:0
+#, python-format
+msgid "PDF content not found in response"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/ngsign_client.py:0
+#, python-format
+msgid "XML content not found in response"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Sign with NGSign"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Check NGSign Status"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Generate Debug JSON"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "eInvoice Info"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "NGSign e-invoice"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "NGSign Configuration"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "Configure NGSign API for e-invoicing and SEAL signing"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "eInvoice template settings"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-javascript
+#: code:addons/ngsign_einvoice_odoo/static/src/js/ngsign_action.js:0
+#, python-format
+msgid "No invoices selected."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-javascript
+#: code:addons/ngsign_einvoice_odoo/static/src/js/ngsign_action.js:0
+#, python-format
+msgid "Preparing your eInvoice(s)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-javascript
+#: code:addons/ngsign_einvoice_odoo/static/src/js/ngsign_action.js:0
+#, python-format
+msgid "Sending eInvoice(s) for signature"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-javascript
+#: code:addons/ngsign_einvoice_odoo/static/src/js/ngsign_action.js:0
+#, python-format
+msgid "Process completed successfully."
+msgstr ""
