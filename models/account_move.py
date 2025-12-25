@@ -24,6 +24,11 @@ class AccountMove(models.Model):
     
     ngsign_notify_owner = fields.Boolean(string='Notify Owner', default=lambda self: self.env['ir.config_parameter'].sudo().get_param('ngsign.notify_owner_default', 'True') == 'True', copy=False)
 
+    @api.onchange('partner_id')
+    def _onchange_partner_id_ngsign(self):
+        if self.partner_id:
+            self.ngsign_notify_owner = self.partner_id.ngsign_notify_owner
+
     ngsign_show_debug_button = fields.Boolean(compute='_compute_show_debug_button')
 
     def _compute_show_debug_button(self):
