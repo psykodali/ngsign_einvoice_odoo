@@ -381,7 +381,10 @@ class AccountMove(models.Model):
         return invoice_upload
 
     def action_sign_ngsign(self):
-        self.ensure_one()
+        # Support bulk signing
+        if not self:
+            return
+            
         client = self._get_ngsign_client()
         passphrase = self.env['ir.config_parameter'].sudo().get_param('ngsign.passphrase')
         
@@ -389,34 +392,50 @@ class AccountMove(models.Model):
             raise UserError(_("SEAL Passphrase is missing in Settings."))
 
         try:
-            invoice_payload = self._prepare_ngsign_invoice_payload()
-            
-            # Resolve CC Email (Invoice Address Contact)
+            invoices_payload = []
             cc_email = None
-            # Look for a child partner of type 'invoice'
-            invoice_contact = self.partner_id.child_ids.filtered(lambda p: p.type == 'invoice')
-            if invoice_contact:
-                cc_email = invoice_contact[0].email
+            notify_owner = False
             
+            # Prepare payload for each invoice
+            for move in self:
+                invoice_payload = move._prepare_ngsign_invoice_payload()
+                invoices_payload.append(invoice_payload)
+                
+                # Logic for CC Email and Notify Owner for the batch
+                # We take the first found CC email and if any invoice wants notify_owner, we set it to True
+                # (Or we could enforce it must be same for all, but let's be permissive)
+                if not cc_email:
+                    invoice_contact = move.partner_id.child_ids.filtered(lambda p: p.type == 'invoice')
+                    if invoice_contact:
+                        cc_email = invoice_contact[0].email
+                
+                if move.ngsign_notify_owner:
+                    notify_owner = True
+
             # The API expects a list of invoices for transaction
             response = client.create_transaction_seal(
-                [invoice_payload], 
+                invoices_payload, 
                 passphrase, 
-                notify_owner=self.ngsign_notify_owner,
+                notify_owner=notify_owner,
                 cc_email=cc_email
             )
             
             # Assuming response structure based on docs
             # 7.4 NGInvoiceTransaction -> uuid
-            self.ngsign_transaction_uuid = response.get('uuid')
-            self.ngsign_status = 'pending'
+            transaction_uuid = response.get('uuid')
+            
+            # Update all moves
+            self.write({
+                'ngsign_transaction_uuid': transaction_uuid,
+                'ngsign_status': 'pending'
+            })
             
             # Check status immediately? Or wait for cron/webhook?
             # Let's try to check status immediately just in case it's fast, or leave it pending.
             
         except Exception as e:
-            self.ngsign_status = 'error'
-            raise UserError(_("Failed to sign invoice: %s") % str(e))
+            self.write({'ngsign_status': 'error'})
+            raise UserError(_("Failed to sign invoice(s): %s") % str(e))
 
     def action_check_ngsign_status(self):
         self.ensure_one()
@@ -473,21 +492,50 @@ class AccountMove(models.Model):
 
     def action_generate_debug_json(self):
         """
-        Generate a debug JSON payload for the current invoice.
+        Generate a debug JSON payload for the current invoice(s).
         """
-        self.ensure_one()
+        if not self:
+            return
+
         try:
-            payload = self._prepare_ngsign_invoice_payload()
-            json_data = json.dumps(payload, indent=4, ensure_ascii=False)
+            invoices_payload = []
+            cc_email = None
+            notify_owner = False
+            
+            for move in self:
+                invoice_payload = move._prepare_ngsign_invoice_payload()
+                invoices_payload.append(invoice_payload)
+                
+                if not cc_email:
+                    invoice_contact = move.partner_id.child_ids.filtered(lambda p: p.type == 'invoice')
+                    if invoice_contact:
+                        cc_email = invoice_contact[0].email
+                
+                if move.ngsign_notify_owner:
+                    notify_owner = True
+
+            # Construct the full transaction payload as it would be sent to the API
+            passphrase = self.env['ir.config_parameter'].sudo().get_param('ngsign.passphrase') or "DUMMY_PASSPHRASE"
+            
+            full_payload = {
+                'invoices': invoices_payload,
+                'passphrase': passphrase,
+                'notifyOwner': notify_owner,
+            }
+            if cc_email:
+                full_payload['ccEmail'] = cc_email
+
+            json_data = json.dumps(full_payload, indent=4, ensure_ascii=False)
             
             # Create attachment
+            name_suffix = self[0].name if len(self) == 1 else f"bulk_{len(self)}"
             attachment = self.env['ir.attachment'].create({
-                'name': f'ngsign_debug_{self.name}.json',
+                'name': f'ngsign_debug_{name_suffix}.json',
                 'type': 'binary',
                 'datas': base64.b64encode(json_data.encode('utf-8')),
                 'mimetype': 'application/json',
                 'res_model': 'account.move',
-                'res_id': self.id,
+                'res_id': self[0].id,
             })
             
             return {
