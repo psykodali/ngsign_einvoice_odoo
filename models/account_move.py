@@ -41,6 +41,8 @@ class AccountMove(models.Model):
         api_url = params.get_param('ngsign.api_einvoice_url')
         token = params.get_param('ngsign.bearer_token')
         
+        _logger.info(f"NGSign Config Debug: api_url='{api_url}', token_len={len(token) if token else 0}, token_set={bool(token)}")
+
         missing_params = []
         if not api_url:
             missing_params.append("API URL")
