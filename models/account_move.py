@@ -70,7 +70,7 @@ class AccountMove(models.Model):
     def _compute_show_debug_button(self):
         enable_debug = self.env['ir.config_parameter'].sudo().get_param('ngsign.enable_debug_button')
         for move in self:
-            move.ngsign_show_debug_button = bool(enable_debug)
+            move.ngsign_show_debug_button = (enable_debug == 'True')
 
     def _get_ngsign_client(self):
         params = self.env['ir.config_parameter'].sudo()

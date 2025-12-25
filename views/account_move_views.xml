@@ -11,6 +11,7 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
+                <field name="ngsign_show_debug_button" invisible="1"/>
                 <button name="ngsign_einvoice_odoo.action_sign_ngsign_js" string="Sign with NGSign" type="action" class="oe_highlight"
                         invisible="state != 'posted' or ngsign_status in ('pending', 'signed', 'TTN Signed', 'signed_ngsign')"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
