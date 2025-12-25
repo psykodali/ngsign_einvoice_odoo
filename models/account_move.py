@@ -19,11 +19,10 @@ class AccountMove(models.Model):
     ngsign_status = fields.Selection([
         ('draft', 'Draft'),
         ('pending', 'Pending'),
-        ('signed', 'Signed'),
         ('TTN Signed', 'TTN Signed'),
         ('CANCELLED', 'Cancelled'),
         ('TTN_REJECTED', 'TTN Rejected'),
-        ('signed_ngsign', 'Signed (NGSign Only)'),
+        ('signed_ngsign', 'Signed'),
         ('error', 'Error')
     ], string='NGSign Status', default='draft', copy=False)
     
