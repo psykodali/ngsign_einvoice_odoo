@@ -13,6 +13,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     ngsign_transaction_uuid = fields.Char(string='NGSign Transaction UUID', copy=False)
+    ngsign_invoice_uuid = fields.Char(string='NGSign Invoice UUID', copy=False, help="Unique UUID for the specific invoice within the transaction")
     ngsign_ttn_reference = fields.Char(string='TTN eInvoice ID', copy=False, help="Unique reference returned by TTN after signing")
     ngsign_ttn_qr_code = fields.Binary(string='TTN QR Code', copy=False, attachment=True)
     ngsign_status = fields.Selection([
@@ -418,9 +419,10 @@ class AccountMove(models.Model):
             
             # The API returns a wrapper { "object": { ... }, "errorCode": ... }
             response_data = response.get('object', {})
+            transaction_uuid = response_data.get('uuid')
             invoices_data = response_data.get('invoices', [])
             
-            # Update moves individually with their specific Invoice UUID
+            # Update moves individually with their specific Invoice UUID and the common Transaction UUID
             for move in self:
                 matched_inv = None
                 # Try to match by invoiceNumber
@@ -435,7 +437,8 @@ class AccountMove(models.Model):
                 
                 if matched_inv:
                     move.write({
-                        'ngsign_transaction_uuid': matched_inv.get('uuid'),
+                        'ngsign_transaction_uuid': transaction_uuid,
+                        'ngsign_invoice_uuid': matched_inv.get('uuid'),
                         'ngsign_status': 'pending'
                     })
                 else:
@@ -478,14 +481,25 @@ class AccountMove(models.Model):
 
     def action_check_ngsign_status(self):
         self.ensure_one()
-        if not self.ngsign_transaction_uuid:
+        # We need at least one UUID. Preferably invoice UUID for direct check.
+        if not self.ngsign_invoice_uuid and not self.ngsign_transaction_uuid:
             return
 
         client = self._get_ngsign_client()
         try:
-            # We use the Invoice UUID to check status directly
+            # We use the Invoice UUID to check status directly if available
             # check_status endpoint: /protected/invoice/check/{uuid}
-            response = client.check_status(self.ngsign_transaction_uuid)
+            
+            uuid_to_check = self.ngsign_invoice_uuid
+            
+            # Fallback to transaction UUID if invoice UUID is missing (legacy or error)
+            # But check_status expects invoice UUID. 
+            # If we only have transaction UUID, we might need to use get_transaction_details (old method)
+            # For now, let's assume we have invoice UUID or we try with transaction UUID (which might fail if endpoint is strict)
+            if not uuid_to_check:
+                 uuid_to_check = self.ngsign_transaction_uuid
+            
+            response = client.check_status(uuid_to_check)
             
             # Response is wrapped in "object"
             invoice_data = response.get('object', {})
