@@ -559,15 +559,11 @@ class AccountMove(models.Model):
                         'res_model': 'account.move',
                         'res_id': self.id,
                         'mimetype': 'application/pdf'
-                    })
-                    
-                    # Optionally replace the main attachment or message_post
-                    self.message_post(body=_("Invoice signed via NGSign."), attachments=[(attachment_name, pdf_content)])
                 except Exception as e:
                     _logger.error(f"Failed to download signed PDF: {e}")
                     self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
                 
-            elif status in ['CANCELED', 'TTN_REJECTED']:
+            elif status in ['CANCELED', 'CANCELLED', 'TTN_REJECTED']:
                 self.ngsign_status = 'error'
                 msg = _("NGSign signing failed/rejected. Status: %s") % status
                 if ttn_error:
