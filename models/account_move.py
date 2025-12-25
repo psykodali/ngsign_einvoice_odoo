@@ -123,13 +123,25 @@ class AccountMove(models.Model):
                 if tax == primary_vat_tax:
                     continue
                 
+                # Calculate tax amount for this line item
+                # This is an approximation. Odoo stores tax amount on the line only if it's price_include=True or we compute it.
+                # line.price_total - line.price_subtotal gives total tax. But we need per tax.
+                # We can use the tax object to compute it.
+                tax_values = tax.compute_all(line.price_unit, currency=line.currency_id, quantity=line.quantity, product=line.product_id, partner=line.partner_id)
+                # tax_values['taxes'] is a list of dicts. Find the one matching our tax.id
+                current_tax_amount = 0.0
+                for t in tax_values['taxes']:
+                    if t['id'] == tax.id:
+                        current_tax_amount = t['amount']
+                        break
+
                 other_taxes.append({
                     'taxTypeName': {
                         'code': tax.teif_code or 'I-1606', # Default to Autre
-                        'value': tax.name
+                        'value': current_tax_amount # Value should be the amount
                     },
                     'taxDetails': {
-                        'taxRate': str(tax.amount)
+                        'taxRate': tax.amount
                     }
                 })
 
@@ -151,20 +163,6 @@ class AccountMove(models.Model):
         # 3. Totals and Financials
         # Stamp Tax (Timbre)
         stamp_tax_amount = 0.0
-        # Find tax line with name 'Timbre' or specific code if we had it on lines (usually it's a global tax or added as line)
-        # In Odoo, Timbre is often a tax on a line or a specific line. 
-        # If it's a tax on a line, it's in amount_tax. If it's a specific product, it's in lines.
-        # Let's look for a tax with teif_code 'I-1601' in the tax lines (account.move.tax.line? No, tax_totals in recent odoo)
-        # Or just check invoice_line_ids for a tax that matches.
-        # Simplified: Check all taxes applied.
-        for line in self.invoice_line_ids:
-            for tax in line.tax_ids:
-                if tax.teif_code == 'I-1601':
-                    # This is tricky because tax amount is per line. 
-                    # We might need to sum it up from tax_totals or similar.
-                    # For now, let's assume standard Odoo tax computation handles the total amount_tax.
-                    # But TEIF wants 'stampTax' separately.
-                    pass
         
         # Better approach for Stamp Tax: Look at tax_totals or line_ids if it's a specific line.
         # Often Timbre is a tax.
@@ -181,9 +179,8 @@ class AccountMove(models.Model):
         # Let's check `line_ids` (journal items) which are tax lines.
         for tax_line in self.line_ids:
             if tax_line.tax_line_id and tax_line.tax_line_id.teif_code == 'I-1601':
-                stamp_tax += abs(tax_line.balance) # In company currency? Need invoice currency.
                 # tax_line.amount_currency is in invoice currency.
-                stamp_tax = abs(tax_line.amount_currency)
+                stamp_tax += abs(tax_line.amount_currency)
 
         # 4. Payment Details
         # Resolve Bank Account (Unconditionally)
