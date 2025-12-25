@@ -119,23 +119,11 @@ class AccountMove(models.Model):
                     }
                 })
 
-            # Discount (Allowance)
-            item_alc = None
-            if line.discount > 0:
-                item_alc = {
-                    'alc': True, # Allowance
-                    'pcd': {
-                        'percentage': str(line.discount),
-                        'percentageBasis': str(line.quantity * line.price_unit)
-                    },
-                    'comments': ['Remise ligne']
-                }
-
             items.append({
                 'name': line.name[:500],
                 'code': line.product_id.default_code or 'N/A',
                 'quantity': line.quantity,
-                'unit': line.product_uom_id.name or 'UNIT',
+                'unit': (line.product_uom_id.name or 'UNIT')[:7],
                 'unitPrice': line.price_unit,
                 'totalPrice': line.price_subtotal,
                 'tvaRate': vat_rate,
@@ -143,7 +131,6 @@ class AccountMove(models.Model):
                 'taxes': other_taxes,
                 'discountPercentage': line.discount,
                 'discount': (line.quantity * line.price_unit * line.discount) / 100,
-                'itemAlc': item_alc,
                 'service': line.product_id.type == 'service'
             })
 
@@ -244,16 +231,8 @@ class AccountMove(models.Model):
 
         # Document References
         document_references = []
-        
-        # 1. Bon de Commande (I-816) from Customer Reference (ref)
-        if self.ref:
-            document_references.append({
-                'refID': 'I-83', # Bon de commande
-                'value': self.ref[:200],
-                'date': self.invoice_date.isoformat() if self.invoice_date else fields.Date.today().isoformat() # Optional, using invoice date as fallback
-            })
-            
-        # 2. Previous Invoice (I-811) for Credit Notes
+             
+        # 1. Previous Invoice (I-88) for Credit Notes
         if self.move_type == 'out_refund' and self.reversed_entry_id:
             # We need the TTN reference of the original invoice
             original_ttn_ref = self.reversed_entry_id.ngsign_ttn_reference
