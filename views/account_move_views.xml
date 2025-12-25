@@ -11,20 +11,22 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <field name="ngsign_show_debug_button" invisible="1"/>
+                <field name="ngsign_show_debug_json_button" invisible="1"/>
+                <field name="ngsign_show_transaction_uuid" invisible="1"/>
+                <field name="ngsign_show_invoice_uuid" invisible="1"/>
                 <button name="ngsign_einvoice_odoo.action_sign_ngsign_js" string="Sign with NGSign" type="action" class="oe_highlight"
                         invisible="state != 'posted' or ngsign_status in ('pending', 'signed', 'TTN Signed', 'signed_ngsign')"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status in ('draft', 'CANCELLED', 'TTN Signed')"/>
                 <button name="action_generate_debug_json" string="Generate Debug JSON" type="object"
-                        invisible="not ngsign_show_debug_button"/>
+                        invisible="not ngsign_show_debug_json_button"/>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page string="eInvoice Info" name="einvoice_info">
                     <group>
                         <group>
-                            <field name="ngsign_transaction_uuid" readonly="1" invisible="not ngsign_show_debug_button"/>
-                            <field name="ngsign_invoice_uuid" readonly="1" invisible="not ngsign_show_debug_button"/>
+                            <field name="ngsign_transaction_uuid" readonly="1" invisible="not ngsign_show_transaction_uuid"/>
+                            <field name="ngsign_invoice_uuid" readonly="1" invisible="not ngsign_show_invoice_uuid"/>
                             <field name="ngsign_ttn_reference" readonly="1"/>
                             <field name="ngsign_ttn_qr_code" widget="image" readonly="1" invisible="not ngsign_ttn_qr_code"/>
                         </group>

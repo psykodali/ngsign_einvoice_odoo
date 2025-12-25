@@ -39,12 +39,7 @@
                                         <button name="action_open_template_settings" string="eInvoice template settings" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
                                     <div class="row mt16">
-                                        <label for="ngsign_enable_debug_button" class="col-3 o_light_label"/>
-                                        <field name="ngsign_enable_debug_button" class="col-9"/>
-                                    </div>
-                                    <div class="row mt8" invisible="not ngsign_enable_debug_button">
-                                        <label for="ngsign_debug_include_pdf" class="col-3 o_light_label"/>
-                                        <field name="ngsign_debug_include_pdf" class="col-9"/>
+                                        <button name="action_open_developer_settings" string="Developer Options" type="object" class="oe_link" icon="fa-cogs"/>
                                     </div>
                                 </div>
                             </div>

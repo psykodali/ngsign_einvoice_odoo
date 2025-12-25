@@ -64,12 +64,20 @@ class AccountMove(models.Model):
         if self.partner_id:
             self.ngsign_notify_owner = self.partner_id.ngsign_notify_owner
 
-    ngsign_show_debug_button = fields.Boolean(compute='_compute_show_debug_button')
+    ngsign_show_debug_json_button = fields.Boolean(compute='_compute_ngsign_developer_settings')
+    ngsign_show_transaction_uuid = fields.Boolean(compute='_compute_ngsign_developer_settings')
+    ngsign_show_invoice_uuid = fields.Boolean(compute='_compute_ngsign_developer_settings')
 
-    def _compute_show_debug_button(self):
-        enable_debug = self.env['ir.config_parameter'].sudo().get_param('ngsign.enable_debug_button')
+    def _compute_ngsign_developer_settings(self):
+        params = self.env['ir.config_parameter'].sudo()
+        show_debug = params.get_param('ngsign.show_debug_json_button', 'False') == 'True'
+        show_trans_uuid = params.get_param('ngsign.show_transaction_uuid', 'False') == 'True'
+        show_inv_uuid = params.get_param('ngsign.show_invoice_uuid', 'False') == 'True'
+        
         for move in self:
-            move.ngsign_show_debug_button = (enable_debug == 'True')
+            move.ngsign_show_debug_json_button = show_debug
+            move.ngsign_show_transaction_uuid = show_trans_uuid
+            move.ngsign_show_invoice_uuid = show_inv_uuid
 
     def _get_ngsign_client(self):
         params = self.env['ir.config_parameter'].sudo()
@@ -131,7 +139,7 @@ class AccountMove(models.Model):
                 # If PDF generation fails, we still want to see the JSON data mapping
                 pdf_base64 = f"PDF_GENERATION_FAILED: {str(e)}"
         else:
-            pdf_base64 = "PDF_CONTENT_OMITTED_BY_SETTING"
+            pdf_base64 = "PDF_CONTENT_OMITTED_BY_DEVELOPER_SETTING"
 
         # 1. Header Data
         # Map move_type to TEIF codes
