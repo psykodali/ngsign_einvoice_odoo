@@ -22,6 +22,7 @@
         'views/ngsign_template_settings_views.xml',
         'views/res_partner_views.xml',
         'views/res_partner_views.xml',
+        'views/ngsign_developer_settings_views.xml',
     ],
     'assets': {
         'web.assets_backend': [
