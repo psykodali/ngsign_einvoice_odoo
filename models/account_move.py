@@ -439,7 +439,20 @@ class AccountMove(models.Model):
                     request_url = e.response.url
                     status_code = e.response.status_code
                     
-                    debug_info = f"\n\n--- NGSign Debug Info ---\nURL: {request_url}\nStatus: {status_code}\nResponse: {response_body}"
+                    # Extract request details
+                    request_body = "N/A"
+                    if hasattr(e, 'request') and e.request is not None and e.request.body:
+                        request_body = e.request.body
+                        # Try to pretty print if it's JSON
+                        try:
+                            if isinstance(request_body, bytes):
+                                request_body = request_body.decode('utf-8')
+                            request_json = json.loads(request_body)
+                            request_body = json.dumps(request_json, indent=4, ensure_ascii=False)
+                        except:
+                            pass
+                    
+                    debug_info = f"\n\n--- NGSign Debug Info ---\nURL: {request_url}\nStatus: {status_code}\nRequest Payload:\n{request_body}\n\nResponse:\n{response_body}"
                     error_msg += debug_info
                 except Exception as debug_e:
                     error_msg += f"\n(Failed to extract debug info: {debug_e})"
