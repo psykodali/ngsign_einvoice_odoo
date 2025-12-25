@@ -13,6 +13,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     ngsign_transaction_uuid = fields.Char(string='NGSign Transaction UUID', copy=False)
+    ngsign_ttn_reference = fields.Char(string='TTN Reference', copy=False, help="Unique reference returned by TTN after signing")
     ngsign_status = fields.Selection([
         ('draft', 'Draft'),
         ('pending', 'Pending'),
@@ -131,7 +132,7 @@ class AccountMove(models.Model):
             items.append({
                 'name': line.name[:500],
                 'code': line.product_id.default_code or 'N/A',
-                'quantity': str(line.quantity),
+                'quantity': line.quantity,
                 'unit': line.product_uom_id.name or 'UNIT',
                 'unitPrice': line.price_unit,
                 'totalPrice': line.price_subtotal,
@@ -239,6 +240,28 @@ class AccountMove(models.Model):
         company_vat = self.company_id.vat or ''
         company_vat = company_vat.upper().replace('TN', '').strip()
 
+        # Document References
+        document_references = []
+        
+        # 1. Bon de Commande (I-816) from Customer Reference (ref)
+        if self.ref:
+            document_references.append({
+                'refID': 'I-83', # Bon de commande
+                'value': self.ref[:200],
+                'date': self.invoice_date.isoformat() if self.invoice_date else fields.Date.today().isoformat() # Optional, using invoice date as fallback
+            })
+            
+        # 2. Previous Invoice (I-811) for Credit Notes
+        if self.move_type == 'out_refund' and self.reversed_entry_id:
+            # We need the TTN reference of the original invoice
+            original_ttn_ref = self.reversed_entry_id.ngsign_ttn_reference
+            if original_ttn_ref:
+                document_references.append({
+                    'refID': 'I-88', # Facture précédente
+                    'value': original_ttn_ref,
+                    'date': self.reversed_entry_id.invoice_date.isoformat() if self.reversed_entry_id.invoice_date else None
+                })
+
         # Construct TEIF Invoice object
         # Convert date to Unix timestamp (seconds)
         invoice_date_ts = 0
@@ -253,6 +276,7 @@ class AccountMove(models.Model):
             'documentIdentifier': self.name,
             'invoiceDate': invoice_date_ts,
             'documentType': teif_doc_type,
+            'documentReferences': document_references,
             'clientIdentifier': partner_vat, # Customer Tax ID
             'currencyIdentifier': self.currency_id.name,
             'comments': [self.narration] if self.narration else [],
@@ -358,6 +382,7 @@ class AccountMove(models.Model):
 
             if status == 'TTN_SIGNED':
                 self.ngsign_status = 'signed'
+                self.ngsign_ttn_reference = invoice_data.get('ttnReference')
                 # Download PDF
                 pdf_content = client.download_pdf(invoice_uuid)
                 

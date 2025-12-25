@@ -16,7 +16,7 @@ It aligns the **NGSign JSON** payload (PDF 1), the official **TEIF XML** structu
 | `invoiceFileB64` | N/A (Transport) | `base64.b64encode(pdf_content)` | Render the report `account.report_invoice`. |
 | `type` | `Bgm/DocumentType` | `account.move.move_type` | **Map to Code I-1:**<br>• `out_invoice` $\rightarrow$ `"I-11"`<br>• `out_refund` $\rightarrow$ `"I-12"` |
 | `clientEmail` | N/A (Notification) | `res.partner.email` | Used by NGSign to email the signed PDF. |
-| `configuration` | N/A (Visual) | *Hardcoded Dictionary* | Coordinates for QR code (e.g., `{ "qrPositionX": 100... }`). |
+| `configuration` | N/A (Visual) | `ngsign.template.settings` | **Dynamic Settings:**<br>`qrPositionX`, `qrPositionY`, `qrPositionP`<br>`qrRatio`, `textPositionX`, `textPositionY`, `textPage`<br>`labelPositionX`, `labelPositionY`, `labelPositionP`<br>`allPages` |
 | `invoiceTIEF` | `TEIF` (Root) | `account.move` | *The root of the data structure below.* |
 
 ---
@@ -26,7 +26,7 @@ It aligns the **NGSign JSON** payload (PDF 1), the official **TEIF XML** structu
 | NGSign JSON Field | TEIF XML Element | Odoo 18 Equivalent | Logic / Constraint |
 | :--- | :--- | :--- | :--- |
 | `documentIdentifier` | `Bgm/DocumentIdentifier` | `account.move.name` | Max 70 chars. |
-| `invoiceDate` | `Dtm/DateText` (I-31) | `account.move.invoice_date` | Format: `YYYY-MM-DD`. |
+| `invoiceDate` | `Dtm/DateText` (I-31) | `account.move.invoice_date` | **Unix Timestamp (Milliseconds)**<br>Example: `1754348400000`. |
 | `documentType` | `Bgm/DocumentType` | `account.move.move_type` | Same mapping as wrapper `type`. |
 | `clientIdentifier` | `Nad/PartnerIdentifier` | `res.partner.vat` | **Strict Regex:** `[0-9]{7}[A-Z]...`<br>Strip country code (e.g., remove 'TN'). |
 | `currencyIdentifier` | `InvoiceMoa/.../@currency` | `account.move.currency_id.name` | ISO 4217 (e.g., "TND"). |
@@ -57,6 +57,7 @@ It aligns the **NGSign JSON** payload (PDF 1), the official **TEIF XML** structu
 | `invoiceTotalWithoutTax`| `InvoiceMoa/Amount` (I-172) | `account.move.amount_untaxed` | Total HT. |
 | `invoiceTotalWithTax` | `InvoiceMoa/Amount` (I-180) | `account.move.amount_total` | Total TTC. |
 | `invoiceTotalTax` | `InvoiceMoa/Amount` (I-181) | `account.move.amount_tax` | Total Tax Amount. |
+| `taxes` | `InvoiceTax` (List) | `account.move.tax_totals` | **Global Tax List:**<br>List of all taxes applied.<br>Fields: `code`, `taxRate`, `amount`, `amountBase`. |
 | `stampTax` | `InvoiceTax` (I-1601) | *Calculated* | Filter `line_ids` for tax name "Timbre".<br>Usually `0.600` or `1.000`. |
 | `invoiceTotalinLetters` | `InvoiceMoa/AmountDesc` | `account.move.amount_total_words` | Use Odoo's built-in num2words function. |
 | `totalDiscount` | `InvoiceAlc` | *Calculated* | Odoo does not store a global discount total by default. Sum line discounts if needed. |
