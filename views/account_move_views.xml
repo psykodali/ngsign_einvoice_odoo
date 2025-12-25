@@ -14,9 +14,14 @@
                         invisible="not ngsign_show_debug_button"/>
             </xpath>
             <xpath expr="//field[@name='payment_reference']" position="after">
-                <field name="ngsign_status" readonly="1"/>
-                <field name="ngsign_show_debug_button" invisible="1"/>
-                <field name="ngsign_transaction_uuid" readonly="1" groups="base.group_no_one"/>
+                <group string="NGSign Info" name="ngsign_info">
+                    <field name="ngsign_transaction_uuid" readonly="1" groups="base.group_no_one"/>
+                    <field name="ngsign_ttn_reference" readonly="1" string="TTN eInvoice ID"/>
+                    <field name="ngsign_ttn_qr_code" widget="image" readonly="1" invisible="not ngsign_ttn_qr_code"/>
+                    <field name="ngsign_status" readonly="1"/>
+                    <field name="ngsign_notify_owner" readonly="ngsign_status != 'draft'"/>
+                    <field name="ngsign_show_debug_button" invisible="1"/>
+                </group>
             </xpath>
         </field>
     </record>
