@@ -76,11 +76,6 @@ msgid "TTN Rejected"
 msgstr "Rejeté par TTN"
 
 #. module: ngsign_einvoice_odoo
-#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__signed_ngsign
-msgid "Signed (NGSign Only)"
-msgstr "Signé (NGSign uniquement)"
-
-#. module: ngsign_einvoice_odoo
 #: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__error
 msgid "Error"
 msgstr "Erreur"
