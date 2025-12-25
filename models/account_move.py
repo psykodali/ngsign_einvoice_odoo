@@ -41,8 +41,14 @@ class AccountMove(models.Model):
         api_url = params.get_param('ngsign.api_einvoice_url')
         token = params.get_param('ngsign.bearer_token')
         
-        if not api_url or not token:
-            raise UserError(_("NGSign configuration is missing. Please check Settings."))
+        missing_params = []
+        if not api_url:
+            missing_params.append("API URL")
+        if not token:
+            missing_params.append("Bearer Token")
+            
+        if missing_params:
+            raise UserError(_("NGSign configuration is missing: %s. Please check Settings.") % ", ".join(missing_params))
             
         return NGSignClient(api_url, token)
 
