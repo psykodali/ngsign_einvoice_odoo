@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <button name="action_sign_ngsign" string="Sign with NGSign" type="object" class="oe_highlight"
-                        invisible="state != 'posted' or ngsign_status in ('pending', 'signed')"/>
+                        invisible="state != 'posted' or ngsign_status in ('pending', 'signed', 'TTN Signed', 'SIGNED')"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status != 'pending'"/>
                 <button name="action_generate_debug_json" string="Generate Debug JSON" type="object"

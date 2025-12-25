@@ -20,6 +20,10 @@ class AccountMove(models.Model):
         ('draft', 'Draft'),
         ('pending', 'Pending'),
         ('signed', 'Signed'),
+        ('TTN Signed', 'TTN Signed'),
+        ('CANCELLED', 'Cancelled'),
+        ('TTN_REJECTED', 'TTN Rejected'),
+        ('SIGNED', 'Signed (NGSign Only)'),
         ('error', 'Error')
     ], string='NGSign Status', default='draft', copy=False)
     
@@ -565,7 +569,7 @@ class AccountMove(models.Model):
                     self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
                 
             elif status == 'TTN_REJECTED':
-                self.ngsign_status = 'CANCELLED'
+                self.ngsign_status = 'TTN_REJECTED'
                 msg = _("NGSign signing failed/rejected. Status: %s") % status
                 if ttn_error:
                     msg += f"\nTTN Error: {ttn_error}"
