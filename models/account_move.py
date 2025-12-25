@@ -100,20 +100,31 @@ class AccountMove(models.Model):
         # Generate PDF report
         pdf_base64 = ""
         try:
-            # Find report action using search to be safe
-            report_action = self.env['ir.actions.report'].sudo().search([
-                ('model', '=', 'account.move'),
-                ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+            # Check if we already have a generated PDF attachment (from prepare step)
+            attachment_name = f"{self.name}_ngsign_prepare.pdf"
+            attachment = self.env['ir.attachment'].search([
+                ('res_model', '=', 'account.move'),
+                ('res_id', '=', self.id),
+                ('name', '=', attachment_name)
             ], limit=1)
 
-            if report_action:
-                # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
-                # Force language to partner's lang or French
-                lang = self.partner_id.lang or 'fr_FR'
-                pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, self.ids)
-                pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+            if attachment:
+                pdf_base64 = attachment.datas.decode('utf-8')
             else:
-                pdf_base64 = "REPORT_ACTION_NOT_FOUND"
+                # Find report action using search to be safe
+                report_action = self.env['ir.actions.report'].sudo().search([
+                    ('model', '=', 'account.move'),
+                    ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+                ], limit=1)
+
+                if report_action:
+                    # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
+                    # Force language to partner's lang or French
+                    lang = self.partner_id.lang or 'fr_FR'
+                    pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, self.ids)
+                    pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+                else:
+                    pdf_base64 = "REPORT_ACTION_NOT_FOUND"
                 
         except Exception as e:
             # If PDF generation fails, we still want to see the JSON data mapping
@@ -412,7 +423,52 @@ class AccountMove(models.Model):
         
         return invoice_upload
 
-    def action_sign_ngsign(self):
+    def action_ngsign_prepare(self):
+        """
+        Step 1 of signing process: Generate PDFs and store them as attachments.
+        This is called by the JS client action before sending.
+        """
+        for move in self:
+            try:
+                # Find report action
+                report_action = self.env['ir.actions.report'].sudo().search([
+                    ('model', '=', 'account.move'),
+                    ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+                ], limit=1)
+
+                if report_action:
+                    lang = self.partner_id.lang or 'fr_FR'
+                    pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, move.ids)
+                    
+                    # Save as temporary attachment
+                    attachment_name = f"{move.name}_ngsign_prepare.pdf"
+                    
+                    # Remove old attachment if exists
+                    old_attachment = self.env['ir.attachment'].search([
+                        ('res_model', '=', 'account.move'),
+                        ('res_id', '=', move.id),
+                        ('name', '=', attachment_name)
+                    ])
+                    old_attachment.unlink()
+                    
+                    self.env['ir.attachment'].create({
+                        'name': attachment_name,
+                        'type': 'binary',
+                        'datas': base64.b64encode(pdf_content),
+                        'res_model': 'account.move',
+                        'res_id': move.id,
+                        'mimetype': 'application/pdf'
+                    })
+            except Exception as e:
+                _logger.error(f"Failed to prepare PDF for invoice {move.name}: {e}")
+                raise UserError(_("Failed to prepare PDF for invoice %s: %s") % (move.name, str(e)))
+        return True
+
+    def action_ngsign_send(self):
+        """
+        Step 2 of signing process: Send invoices to NGSign.
+        This is called by the JS client action after preparation.
+        """
         # Support bulk signing
         if not self:
             return
@@ -430,12 +486,11 @@ class AccountMove(models.Model):
             
             # Prepare payload for each invoice
             for move in self:
+                # This will now use the attachment created in prepare step
                 invoice_payload = move._prepare_ngsign_invoice_payload()
                 invoices_payload.append(invoice_payload)
                 
                 # Logic for CC Email and Notify Owner for the batch
-                # We take the first found CC email and if any invoice wants notify_owner, we set it to True
-                # (Or we could enforce it must be same for all, but let's be permissive)
                 if not cc_email:
                     invoice_contact = move.partner_id.child_ids.filtered(lambda p: p.type == 'invoice')
                     if invoice_contact:
@@ -480,6 +535,16 @@ class AccountMove(models.Model):
                     _logger.warning(f"NGSign: Could not find UUID for invoice {move.name}")
                     move.write({'ngsign_status': 'error'})
             
+            # Cleanup temporary attachments
+            for move in self:
+                attachment_name = f"{move.name}_ngsign_prepare.pdf"
+                attachments = self.env['ir.attachment'].search([
+                    ('res_model', '=', 'account.move'),
+                    ('res_id', '=', move.id),
+                    ('name', '=', attachment_name)
+                ])
+                attachments.unlink()
+                
         except Exception as e:
             self.write({'ngsign_status': 'error'})
             
@@ -511,8 +576,15 @@ class AccountMove(models.Model):
                     error_msg += debug_info
                 except Exception as debug_e:
                     error_msg += f"\n(Failed to extract debug info: {debug_e})"
-
+            
             raise UserError(_("Failed to sign invoice(s): %s") % error_msg)
+
+    def action_sign_ngsign(self):
+        # Deprecated: Kept for backward compatibility if needed, but UI now calls JS action
+        # We can just redirect to send, but prepare step is skipped if called directly.
+        # Ideally this should not be called anymore from UI.
+        self.action_ngsign_prepare()
+        self.action_ngsign_send()
 
     def action_check_ngsign_status(self):
         self.ensure_one()

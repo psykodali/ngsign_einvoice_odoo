@@ -21,7 +21,13 @@
         'views/account_payment_term_views.xml',
         'views/ngsign_template_settings_views.xml',
         'views/res_partner_views.xml',
+        'views/res_partner_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'ngsign_einvoice_odoo/static/src/js/ngsign_action.js',
+        ],
+    },
     'installable': True,
     'application': False,
     'license': 'LGPL-3',

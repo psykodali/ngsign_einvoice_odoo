@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="action_sign_ngsign_js" model="ir.actions.client">
+        <field name="name">Sign with NGSign</field>
+        <field name="tag">ngsign_einvoice_odoo.action_sign_ngsign_js</field>
+    </record>
+
     <record id="view_move_form_inherit_ngsign" model="ir.ui.view">
         <field name="name">account.move.form.inherit.ngsign</field>
         <field name="model">account.move</field>
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="action_sign_ngsign" string="Sign with NGSign" type="object" class="oe_highlight"
+                <button name="ngsign_einvoice_odoo.action_sign_ngsign_js" string="Sign with NGSign" type="action" class="oe_highlight"
                         invisible="state != 'posted' or ngsign_status in ('pending', 'signed', 'TTN Signed', 'signed_ngsign')"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status in ('draft', 'CANCELLED', 'TTN Signed')"/>
