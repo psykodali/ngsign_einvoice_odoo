@@ -527,7 +527,7 @@ class AccountMove(models.Model):
             ttn_error = invoice_data.get('ttnErrorMessage')
 
             if status == 'TTN_SIGNED':
-                self.ngsign_status = 'signed'
+                self.ngsign_status = 'TTN Signed'
                 self.ngsign_ttn_reference = invoice_data.get('ttnReference')
                 
                 # Save TTN QR Code
@@ -564,9 +564,15 @@ class AccountMove(models.Model):
                     _logger.error(f"Failed to download signed PDF: {e}")
                     self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
                 
-            elif status in ['CANCELED', 'CANCELLED', 'TTN_REJECTED']:
+            elif status == 'TTN_REJECTED':
                 self.ngsign_status = 'CANCELLED'
                 msg = _("NGSign signing failed/rejected. Status: %s") % status
+                if ttn_error:
+                    msg += f"\nTTN Error: {ttn_error}"
+                self.message_post(body=msg)
+            elif status == 'CANCELLED':
+                self.ngsign_status = 'CANCELLED'
+                msg = _("NGSign transaction cancelled. Status: %s") % status
                 if ttn_error:
                     msg += f"\nTTN Error: {ttn_error}"
                 self.message_post(body=msg)
@@ -574,7 +580,7 @@ class AccountMove(models.Model):
                  # Signed by NGSign but not yet by TTN (or TTN process pending/failed without final status)
                  # If ttnErrorMessage is present, it might be a failure
                  if ttn_error:
-                     self.ngsign_status = 'error'
+                     self.ngsign_status = 'SIGNED'
                      self.message_post(body=_("NGSign Signed but TTN Error: %s") % ttn_error)
                  else:
                      # Just signed by NGSign, waiting for TTN? Or is SIGNED final for non-TTN?
