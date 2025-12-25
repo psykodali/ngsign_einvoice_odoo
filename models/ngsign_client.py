@@ -74,3 +74,16 @@ class NGSignClient:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
+
+    def get_transaction_status_public(self, transaction_uuid):
+        """
+        Check the status of a transaction using the public endpoint.
+        Endpoint: GET /any/invoice/{transaction_uuid}
+        No Authorization header needed.
+        """
+        url = f"{self.api_url}/any/invoice/{transaction_uuid}"
+        # No auth headers for public endpoint
+        headers = {'Content-Type': 'application/json'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()

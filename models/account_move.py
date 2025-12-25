@@ -481,34 +481,50 @@ class AccountMove(models.Model):
 
     def action_check_ngsign_status(self):
         self.ensure_one()
-        # We need at least one UUID. Preferably invoice UUID for direct check.
-        if not self.ngsign_invoice_uuid and not self.ngsign_transaction_uuid:
+        # We need at least one UUID. Preferably transaction UUID for public check.
+        if not self.ngsign_transaction_uuid:
             return
 
         client = self._get_ngsign_client()
         try:
-            # We use the Invoice UUID to check status directly if available
-            # check_status endpoint: /protected/invoice/check/{uuid}
-            
-            uuid_to_check = self.ngsign_invoice_uuid
-            
-            # Fallback to transaction UUID if invoice UUID is missing (legacy or error)
-            # But check_status expects invoice UUID. 
-            # If we only have transaction UUID, we might need to use get_transaction_details (old method)
-            # For now, let's assume we have invoice UUID or we try with transaction UUID (which might fail if endpoint is strict)
-            if not uuid_to_check:
-                 uuid_to_check = self.ngsign_transaction_uuid
-            
-            response = client.check_status(uuid_to_check)
+            # Use public endpoint which returns all invoices in transaction
+            response = client.get_transaction_status_public(self.ngsign_transaction_uuid)
             
             # Response is wrapped in "object"
-            invoice_data = response.get('object', {})
+            transaction_data = response.get('object', {})
+            invoices = transaction_data.get('invoices', [])
             
+            if not invoices:
+                return
+
+            # Find the invoice matching this record
+            invoice_data = None
+            
+            # 1. Try matching by Invoice UUID if we have it
+            if self.ngsign_invoice_uuid:
+                for inv in invoices:
+                    if inv.get('uuid') == self.ngsign_invoice_uuid:
+                        invoice_data = inv
+                        break
+            
+            # 2. If not found or no Invoice UUID, try matching by invoiceNumber (name)
             if not invoice_data:
+                for inv in invoices:
+                    if inv.get('invoiceNumber') == self.name:
+                        invoice_data = inv
+                        break
+            
+            # 3. Fallback: if only 1 invoice in transaction, assume it's this one
+            if not invoice_data and len(invoices) == 1:
+                invoice_data = invoices[0]
+
+            if not invoice_data:
+                _logger.warning(f"NGSign: Could not find invoice {self.name} (UUID: {self.ngsign_invoice_uuid}) in transaction {self.ngsign_transaction_uuid}")
                 return
 
             status = invoice_data.get('status')
             invoice_uuid = invoice_data.get('uuid')
+            ttn_error = invoice_data.get('ttnErrorMessage')
 
             if status == 'TTN_SIGNED':
                 self.ngsign_status = 'signed'
@@ -527,25 +543,46 @@ class AccountMove(models.Model):
                         _logger.warning(f"Failed to process TTN QR Code: {e}")
 
                 # Download PDF
-                pdf_content = client.download_pdf(invoice_uuid)
-                
-                # Update attachment
-                attachment_name = f"{self.name}_signed.pdf"
-                self.env['ir.attachment'].create({
-                    'name': attachment_name,
-                    'type': 'binary',
-                    'datas': base64.b64encode(pdf_content),
-                    'res_model': 'account.move',
-                    'res_id': self.id,
-                    'mimetype': 'application/pdf'
-                })
-                
-                # Optionally replace the main attachment or message_post
-                self.message_post(body=_("Invoice signed via NGSign."), attachments=[(attachment_name, pdf_content)])
+                # Note: download_pdf might still require auth if it's a protected endpoint.
+                # If public check is used, maybe download is also public? 
+                # The client.download_pdf uses /protected/invoice/pdf/{uuid} which needs token.
+                # Assuming we still have token configured for download.
+                try:
+                    pdf_content = client.download_pdf(invoice_uuid)
+                    
+                    # Update attachment
+                    attachment_name = f"{self.name}_signed.pdf"
+                    self.env['ir.attachment'].create({
+                        'name': attachment_name,
+                        'type': 'binary',
+                        'datas': base64.b64encode(pdf_content),
+                        'res_model': 'account.move',
+                        'res_id': self.id,
+                        'mimetype': 'application/pdf'
+                    })
+                    
+                    # Optionally replace the main attachment or message_post
+                    self.message_post(body=_("Invoice signed via NGSign."), attachments=[(attachment_name, pdf_content)])
+                except Exception as e:
+                    _logger.error(f"Failed to download signed PDF: {e}")
+                    self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
                 
             elif status in ['CANCELED', 'TTN_REJECTED']:
                 self.ngsign_status = 'error'
-                self.message_post(body=_("NGSign signing failed/rejected. Status: %s") % status)
+                msg = _("NGSign signing failed/rejected. Status: %s") % status
+                if ttn_error:
+                    msg += f"\nTTN Error: {ttn_error}"
+                self.message_post(body=msg)
+            elif status == 'SIGNED':
+                 # Signed by NGSign but not yet by TTN (or TTN process pending/failed without final status)
+                 # If ttnErrorMessage is present, it might be a failure
+                 if ttn_error:
+                     self.ngsign_status = 'error'
+                     self.message_post(body=_("NGSign Signed but TTN Error: %s") % ttn_error)
+                 else:
+                     # Just signed by NGSign, waiting for TTN? Or is SIGNED final for non-TTN?
+                     # Assuming for e-invoice we wait for TTN_SIGNED.
+                     pass
             else:
                 # Still pending or processing
                 pass
