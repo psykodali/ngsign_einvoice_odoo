@@ -31,6 +31,11 @@ msgid "TTN eInvoice ID"
 msgstr "Réference TTN"
 
 #. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,help:ngsign_einvoice_odoo.field_account_move__ngsign_ttn_reference
+msgid "Unique reference returned by TTN after signing"
+msgstr "Référence unique renvoyée par TTN après signature"
+
+#. module: ngsign_einvoice_odoo
 #: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_account_move__ngsign_ttn_qr_code
 msgid "TTN QR Code"
 msgstr "QRCode TTN"
