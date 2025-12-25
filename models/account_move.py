@@ -416,10 +416,17 @@ class AccountMove(models.Model):
                 cc_email=cc_email
             )
             
-            # Assuming response structure based on docs
-            # 7.4 NGInvoiceTransaction -> uuid
-            transaction_uuid = response.get('uuid')
+            # The API returns a wrapper { "object": { ... }, "errorCode": ... }
+            # 7.4 NGInvoiceTransaction -> uuid is inside 'object'
+            response_data = response.get('object', {})
+            transaction_uuid = response_data.get('uuid')
             
+            if not transaction_uuid:
+                # Fallback or error if uuid is missing but no exception raised
+                # It might be directly in response if docs are slightly off, but let's trust docs first.
+                # If response_data is empty, maybe check response directly just in case.
+                transaction_uuid = response.get('uuid')
+
             # Update all moves
             self.write({
                 'ngsign_transaction_uuid': transaction_uuid,
@@ -475,14 +482,29 @@ class AccountMove(models.Model):
             # Assuming I will add it.
             transaction_details = client.get_transaction_details(self.ngsign_transaction_uuid)
             
+            # Response is wrapped in "object"
+            transaction_data = transaction_details.get('object', {})
+            
             # Check status of the invoice inside the transaction
             # 7.4 NGInvoiceTransaction -> invoices: NGInvoice[]
-            invoices = transaction_details.get('invoices', [])
+            invoices = transaction_data.get('invoices', [])
             if not invoices:
                 return
 
-            # Assuming 1 invoice per transaction for now as per our create call
-            invoice_data = invoices[0]
+            # Find the invoice matching this record
+            invoice_data = None
+            if len(invoices) == 1:
+                invoice_data = invoices[0]
+            else:
+                for inv in invoices:
+                    if inv.get('invoiceNumber') == self.name:
+                        invoice_data = inv
+                        break
+            
+            if not invoice_data:
+                _logger.warning(f"NGSign: Could not find invoice {self.name} in transaction {self.ngsign_transaction_uuid}")
+                return
+
             status = invoice_data.get('status')
             invoice_uuid = invoice_data.get('uuid')
 
@@ -493,21 +515,11 @@ class AccountMove(models.Model):
                 # Save TTN QR Code
                 qr_code_data = invoice_data.get('twoDocImage')
                 if qr_code_data:
-                    # API returns a list of bytes (integers) or base64 string?
-                    # Docs say "Byte[]". Usually in JSON this is a Base64 string or a list of ints.
-                    # If it's a list of ints, we need to convert to bytes then base64.
-                    # If it's already base64 string, we just save it.
-                    # Let's assume it might be a list of ints based on "Byte[]" description in some Java-like APIs,
-                    # but usually JSON APIs return Base64 strings for byte arrays.
-                    # Let's try to handle both or assume Base64 string first as it's standard for JSON.
-                    # If it's a list of ints: bytes(qr_code_data) -> base64.b64encode(...)
-                    
                     try:
                         if isinstance(qr_code_data, list):
                             self.ngsign_ttn_qr_code = base64.b64encode(bytes(qr_code_data))
                         else:
                             # Assume it's already a base64 string or raw bytes?
-                            # If it's a string, it might be base64.
                             self.ngsign_ttn_qr_code = qr_code_data
                     except Exception as e:
                         _logger.warning(f"Failed to process TTN QR Code: {e}")
