@@ -675,6 +675,24 @@ class AccountMove(models.Model):
                     _logger.error(f"Failed to download signed PDF: {e}")
                     self.message_post(body=_("Invoice signed but failed to download PDF: %s") % str(e))
                 
+                # Download XML
+                try:
+                    xml_content = client.download_xml(invoice_uuid)
+                    
+                    # Update attachment
+                    attachment_name = f"{self.name}_signed.xml"
+                    self.env['ir.attachment'].create({
+                        'name': attachment_name,
+                        'type': 'binary',
+                        'datas': base64.b64encode(xml_content),
+                        'res_model': 'account.move',
+                        'res_id': self.id,
+                        'mimetype': 'application/xml'
+                    })
+                except Exception as e:
+                    _logger.error(f"Failed to download signed XML: {e}")
+                    self.message_post(body=_("Invoice signed but failed to download XML: %s") % str(e))
+                
             elif status == 'TTN_REJECTED':
                 self.ngsign_status = 'TTN_REJECTED'
                 msg = _("NGSign signing failed/rejected. Status: %s") % status

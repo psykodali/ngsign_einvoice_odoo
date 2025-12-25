@@ -73,6 +73,25 @@ class NGSignClient:
             
         return base64.b64decode(pdf_base64)
 
+    def download_xml(self, uuid):
+        """
+        Download the signed XML.
+        Response is JSON with base64 encoded XML in 'object' field.
+        """
+        url = f"{self.api_url}/protected/invoice/xml/{uuid}"
+        headers = self._get_headers()
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        # Parse JSON response
+        data = response.json()
+        xml_base64 = data.get('object')
+        
+        if not xml_base64:
+            raise UserError(_("XML content not found in response"))
+            
+        return base64.b64decode(xml_base64)
+
     def get_transaction_details(self, uuid):
         """
         Get transaction details.
