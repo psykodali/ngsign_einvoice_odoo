@@ -340,7 +340,7 @@ class AccountMove(models.Model):
         invoice_upload = {
             'invoiceFileB64': pdf_base64,
             'type': teif_doc_type,
-            'clientEmail': self.partner_id.email,
+            'clientEmail': self.partner_id.email or '',
             'invoiceTIEF': teif_invoice,
             'configuration': {
                 'qrPositionX': int(params.get_param('ngsign.qr_position_x', 10)),
