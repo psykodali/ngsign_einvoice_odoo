@@ -15,7 +15,7 @@ class NGSignClient:
             'Content-Type': 'application/json'
         }
 
-    def create_transaction_seal(self, invoices_payload, passphrase):
+    def create_transaction_seal(self, invoices_payload, passphrase, notify_owner=True, cc_email=None):
         """
         Create and sign a transaction using SEAL certificate.
         """
@@ -34,8 +34,11 @@ class NGSignClient:
         payload = {
             'invoices': invoices_payload,
             'passphrase': passphrase,
-            # 'notifyOwner': True # Optional
+            'notifyOwner': notify_owner,
         }
+        
+        if cc_email:
+            payload['ccEmail'] = cc_email
         
         try:
             response = requests.post(url, headers=headers, json=payload)

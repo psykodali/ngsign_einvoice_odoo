@@ -20,6 +20,8 @@ class AccountMove(models.Model):
         ('signed', 'Signed'),
         ('error', 'Error')
     ], string='NGSign Status', default='draft', copy=False)
+    
+    ngsign_notify_owner = fields.Boolean(string='Notify Owner', default=lambda self: self.env['ir.config_parameter'].sudo().get_param('ngsign.notify_owner_default', 'True') == 'True', copy=False)
 
     ngsign_show_debug_button = fields.Boolean(compute='_compute_show_debug_button')
 
@@ -342,8 +344,21 @@ class AccountMove(models.Model):
 
         try:
             invoice_payload = self._prepare_ngsign_invoice_payload()
+            
+            # Resolve CC Email (Invoice Address Contact)
+            cc_email = None
+            # Look for a child partner of type 'invoice'
+            invoice_contact = self.partner_id.child_ids.filtered(lambda p: p.type == 'invoice')
+            if invoice_contact:
+                cc_email = invoice_contact[0].email
+            
             # The API expects a list of invoices for transaction
-            response = client.create_transaction_seal([invoice_payload], passphrase)
+            response = client.create_transaction_seal(
+                [invoice_payload], 
+                passphrase, 
+                notify_owner=self.ngsign_notify_owner,
+                cc_email=cc_email
+            )
             
             # Assuming response structure based on docs
             # 7.4 NGInvoiceTransaction -> uuid
