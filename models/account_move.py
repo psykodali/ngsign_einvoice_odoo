@@ -417,24 +417,30 @@ class AccountMove(models.Model):
             )
             
             # The API returns a wrapper { "object": { ... }, "errorCode": ... }
-            # 7.4 NGInvoiceTransaction -> uuid is inside 'object'
             response_data = response.get('object', {})
-            transaction_uuid = response_data.get('uuid')
+            invoices_data = response_data.get('invoices', [])
             
-            if not transaction_uuid:
-                # Fallback or error if uuid is missing but no exception raised
-                # It might be directly in response if docs are slightly off, but let's trust docs first.
-                # If response_data is empty, maybe check response directly just in case.
-                transaction_uuid = response.get('uuid')
-
-            # Update all moves
-            self.write({
-                'ngsign_transaction_uuid': transaction_uuid,
-                'ngsign_status': 'pending'
-            })
-            
-            # Check status immediately? Or wait for cron/webhook?
-            # Let's try to check status immediately just in case it's fast, or leave it pending.
+            # Update moves individually with their specific Invoice UUID
+            for move in self:
+                matched_inv = None
+                # Try to match by invoiceNumber
+                for inv in invoices_data:
+                    if inv.get('invoiceNumber') == move.name:
+                        matched_inv = inv
+                        break
+                
+                # Fallback: if only 1 invoice and 1 move, assume match
+                if not matched_inv and len(self) == 1 and len(invoices_data) == 1:
+                    matched_inv = invoices_data[0]
+                
+                if matched_inv:
+                    move.write({
+                        'ngsign_transaction_uuid': matched_inv.get('uuid'),
+                        'ngsign_status': 'pending'
+                    })
+                else:
+                    _logger.warning(f"NGSign: Could not find UUID for invoice {move.name}")
+                    move.write({'ngsign_status': 'error'})
             
         except Exception as e:
             self.write({'ngsign_status': 'error'})
@@ -477,32 +483,14 @@ class AccountMove(models.Model):
 
         client = self._get_ngsign_client()
         try:
-            # We use the transaction UUID to get details.
-            # We need to add get_transaction_details to client first.
-            # Assuming I will add it.
-            transaction_details = client.get_transaction_details(self.ngsign_transaction_uuid)
+            # We use the Invoice UUID to check status directly
+            # check_status endpoint: /protected/invoice/check/{uuid}
+            response = client.check_status(self.ngsign_transaction_uuid)
             
             # Response is wrapped in "object"
-            transaction_data = transaction_details.get('object', {})
-            
-            # Check status of the invoice inside the transaction
-            # 7.4 NGInvoiceTransaction -> invoices: NGInvoice[]
-            invoices = transaction_data.get('invoices', [])
-            if not invoices:
-                return
-
-            # Find the invoice matching this record
-            invoice_data = None
-            if len(invoices) == 1:
-                invoice_data = invoices[0]
-            else:
-                for inv in invoices:
-                    if inv.get('invoiceNumber') == self.name:
-                        invoice_data = inv
-                        break
+            invoice_data = response.get('object', {})
             
             if not invoice_data:
-                _logger.warning(f"NGSign: Could not find invoice {self.name} in transaction {self.ngsign_transaction_uuid}")
                 return
 
             status = invoice_data.get('status')
