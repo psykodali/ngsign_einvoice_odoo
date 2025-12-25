@@ -97,6 +97,22 @@ class AccountMove(models.Model):
             
         return NGSignClient(api_url, token)
 
+    def get_ngsign_print_config(self):
+        """
+        Helper to fetch print configuration for QWeb report.
+        Returns a dict with positioning and visibility flags.
+        """
+        params = self.env['ir.config_parameter'].sudo()
+        use_v2 = params.get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+        
+        return {
+            'use_v2': use_v2,
+            'qr_x': int(params.get_param('ngsign.qr_position_x', 10)),
+            'qr_y': int(params.get_param('ngsign.qr_position_y', 10)),
+            'label_x': int(params.get_param('ngsign.label_position_x', 150)),
+            'label_y': int(params.get_param('ngsign.label_position_y', 10)),
+        }
+
     def _prepare_ngsign_invoice_payload(self, include_pdf=True):
         """
         Prepare the payload for NGSign API.
@@ -105,9 +121,18 @@ class AccountMove(models.Model):
         """
         self.ensure_one()
         
+        # Check if V2 endpoint is enabled
+        use_v2 = self.env['ir.config_parameter'].sudo().get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+        
+        # If V2 is enabled, we force include_pdf to False for the payload (no PDF upload)
+        # But for debug purposes, we might still want to see it if include_pdf is True?
+        # The requirement says: "if the option 'Use V2 Seal endpoint' is selected : we will not send the line 'invoiceFileB64': pdf_base64"
+        # So we should omit it from the payload.
+        
         # Generate PDF report
         pdf_base64 = ""
-        if include_pdf:
+        # Only generate PDF if include_pdf is True AND V2 is False
+        if include_pdf and not use_v2:
             try:
                 # Check if we already have a generated PDF attachment (from prepare step)
                 attachment_name = f"{self.name}_ngsign_prepare.pdf"
@@ -138,6 +163,8 @@ class AccountMove(models.Model):
             except Exception as e:
                 # If PDF generation fails, we still want to see the JSON data mapping
                 pdf_base64 = f"PDF_GENERATION_FAILED: {str(e)}"
+        elif use_v2:
+             pdf_base64 = None # Will be omitted in final dict construction if None or we handle it there
         else:
             pdf_base64 = "PDF_CONTENT_OMITTED_BY_DEVELOPER_SETTING"
 
@@ -429,7 +456,6 @@ class AccountMove(models.Model):
         params = self.env['ir.config_parameter'].sudo()
         
         invoice_upload = {
-            'invoiceFileB64': pdf_base64,
             'clientEmail': self.partner_id.email or '',
             'invoiceTIEF': teif_invoice,
             'configuration': {
@@ -446,6 +472,9 @@ class AccountMove(models.Model):
                 'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
             }
         }
+        
+        if pdf_base64 is not None:
+            invoice_upload['invoiceFileB64'] = pdf_base64
         
         return invoice_upload
 
@@ -526,11 +555,14 @@ class AccountMove(models.Model):
                     notify_owner = True
 
             # The API expects a list of invoices for transaction
+            use_v2 = self.env['ir.config_parameter'].sudo().get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+            
             response = client.create_transaction_seal(
                 invoices_payload, 
                 passphrase, 
                 notify_owner=notify_owner,
-                cc_email=cc_email
+                cc_email=cc_email,
+                use_v2=use_v2
             )
             
             # The API returns a wrapper { "object": { ... }, "errorCode": ... }

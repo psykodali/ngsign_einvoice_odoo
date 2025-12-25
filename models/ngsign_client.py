@@ -15,11 +15,14 @@ class NGSignClient:
             'Content-Type': 'application/json'
         }
 
-    def create_transaction_seal(self, invoices_payload, passphrase, notify_owner=True, cc_email=None):
+    def create_transaction_seal(self, invoices_payload, passphrase, notify_owner=True, cc_email=None, use_v2=False):
         """
         Create and sign a transaction using SEAL certificate.
         """
-        url = f"{self.api_url}/protected/invoice/transaction/seal"
+        if use_v2:
+            url = f"{self.api_url}/protected/invoice/v2/transaction/seal"
+        else:
+            url = f"{self.api_url}/protected/invoice/transaction/seal"
         headers = self._get_headers()
         
         # The payload structure for SEAL usually requires the invoices and the passphrase

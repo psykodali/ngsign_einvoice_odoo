@@ -12,6 +12,7 @@ class ResConfigSettings(models.TransientModel):
     ngsign_passphrase = fields.Char(string='SEAL Passphrase', config_parameter='ngsign.passphrase', help='Passphrase for the SEAL certificate')
     ngsign_signer_email = fields.Char(string='Signer Email', config_parameter='ngsign.signer_email', help='Email of the delegated signer (optional)')
     ngsign_notify_owner_default = fields.Boolean(string='Notify Owner Default', config_parameter='ngsign.notify_owner_default', default=True, help='Default value for "Notify Owner" on invoices')
+    ngsign_use_v2_endpoint = fields.Boolean(string='Use V2 Seal Endpoint', config_parameter='ngsign.use_v2_endpoint', help='Use V2 endpoint (no PDF upload, local stamping)')
 
     def set_values(self):
         super(ResConfigSettings, self).set_values()
@@ -23,6 +24,7 @@ class ResConfigSettings(models.TransientModel):
         param.set_param('ngsign.passphrase', self.ngsign_passphrase or '')
         param.set_param('ngsign.signer_email', self.ngsign_signer_email or '')
         param.set_param('ngsign.notify_owner_default', str(self.ngsign_notify_owner_default))
+        param.set_param('ngsign.use_v2_endpoint', str(self.ngsign_use_v2_endpoint))
         
         # Log what we are saving
         import logging
@@ -40,6 +42,7 @@ class ResConfigSettings(models.TransientModel):
             ngsign_passphrase=param.get_param('ngsign.passphrase'),
             ngsign_signer_email=param.get_param('ngsign.signer_email'),
             ngsign_notify_owner_default=param.get_param('ngsign.notify_owner_default', 'True') == 'True',
+            ngsign_use_v2_endpoint=param.get_param('ngsign.use_v2_endpoint', 'False') == 'True',
         )
         return res
 

@@ -35,6 +35,10 @@
                                         <label for="ngsign_notify_owner_default" class="col-3 o_light_label"/>
                                         <field name="ngsign_notify_owner_default" class="col-9"/>
                                     </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_use_v2_endpoint" class="col-3 o_light_label"/>
+                                        <field name="ngsign_use_v2_endpoint" class="col-9"/>
+                                    </div>
                                     <div class="row mt16">
                                         <button name="action_open_template_settings" string="eInvoice template settings" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
