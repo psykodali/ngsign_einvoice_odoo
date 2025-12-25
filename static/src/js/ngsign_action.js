@@ -9,7 +9,7 @@ async function actionSignNGSignJs(env, action) {
     const ui = env.services.ui;
     const notification = env.services.notification;
 
-    const activeIds = action.params.active_ids;
+    const activeIds = (action.context && action.context.active_ids) || (action.params && action.params.active_ids);
 
     if (!activeIds || activeIds.length === 0) {
         notification.add(_t("No invoices selected."), { type: "warning" });
