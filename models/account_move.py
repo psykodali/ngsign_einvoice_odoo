@@ -89,45 +89,49 @@ class AccountMove(models.Model):
             
         return NGSignClient(api_url, token)
 
-    def _prepare_ngsign_invoice_payload(self):
+    def _prepare_ngsign_invoice_payload(self, include_pdf=True):
         """
         Prepare the payload for NGSign API.
         This maps Odoo invoice data to TEIF format.
+        :param include_pdf: Whether to generate/include the PDF content.
         """
         self.ensure_one()
         
         # Generate PDF report
         pdf_base64 = ""
-        try:
-            # Check if we already have a generated PDF attachment (from prepare step)
-            attachment_name = f"{self.name}_ngsign_prepare.pdf"
-            attachment = self.env['ir.attachment'].search([
-                ('res_model', '=', 'account.move'),
-                ('res_id', '=', self.id),
-                ('name', '=', attachment_name)
-            ], limit=1)
-
-            if attachment:
-                pdf_base64 = attachment.datas.decode('utf-8')
-            else:
-                # Find report action using search to be safe
-                report_action = self.env['ir.actions.report'].sudo().search([
-                    ('model', '=', 'account.move'),
-                    ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+        if include_pdf:
+            try:
+                # Check if we already have a generated PDF attachment (from prepare step)
+                attachment_name = f"{self.name}_ngsign_prepare.pdf"
+                attachment = self.env['ir.attachment'].search([
+                    ('res_model', '=', 'account.move'),
+                    ('res_id', '=', self.id),
+                    ('name', '=', attachment_name)
                 ], limit=1)
 
-                if report_action:
-                    # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
-                    # Force language to partner's lang or French
-                    lang = self.partner_id.lang or 'fr_FR'
-                    pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, self.ids)
-                    pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+                if attachment:
+                    pdf_base64 = attachment.datas.decode('utf-8')
                 else:
-                    pdf_base64 = "REPORT_ACTION_NOT_FOUND"
-                
-        except Exception as e:
-            # If PDF generation fails, we still want to see the JSON data mapping
-            pdf_base64 = f"PDF_GENERATION_FAILED: {str(e)}"
+                    # Find report action using search to be safe
+                    report_action = self.env['ir.actions.report'].sudo().search([
+                        ('model', '=', 'account.move'),
+                        ('report_name', 'in', ['account.report_invoice_with_payments', 'account.report_invoice'])
+                    ], limit=1)
+
+                    if report_action:
+                        # Correctly call _render_qweb_pdf on the model, passing the report record and IDs
+                        # Force language to partner's lang or French
+                        lang = self.partner_id.lang or 'fr_FR'
+                        pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, self.ids)
+                        pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
+                    else:
+                        pdf_base64 = "REPORT_ACTION_NOT_FOUND"
+                    
+            except Exception as e:
+                # If PDF generation fails, we still want to see the JSON data mapping
+                pdf_base64 = f"PDF_GENERATION_FAILED: {str(e)}"
+        else:
+            pdf_base64 = "PDF_CONTENT_OMITTED_BY_SETTING"
 
         # 1. Header Data
         # Map move_type to TEIF codes
@@ -748,8 +752,11 @@ class AccountMove(models.Model):
             cc_email = None
             notify_owner = False
             
+            # Check if we should include PDF content
+            include_pdf = self.env['ir.config_parameter'].sudo().get_param('ngsign.debug_include_pdf', 'False') == 'True'
+            
             for move in self:
-                invoice_payload = move._prepare_ngsign_invoice_payload()
+                invoice_payload = move._prepare_ngsign_invoice_payload(include_pdf=include_pdf)
                 invoices_payload.append(invoice_payload)
                 
                 if not cc_email:
@@ -770,15 +777,6 @@ class AccountMove(models.Model):
             }
             if cc_email:
                 full_payload['ccEmail'] = cc_email
-
-            # Check if we should include PDF content
-            include_pdf = self.env['ir.config_parameter'].sudo().get_param('ngsign.debug_include_pdf', 'False') == 'True'
-            
-            if not include_pdf:
-                # Iterate and remove/replace PDF content to save space
-                for inv in full_payload.get('invoices', []):
-                    if 'fileContent' in inv:
-                        inv['fileContent'] = "PDF_CONTENT_OMITTED_BY_SETTING"
             
             json_data = json.dumps(full_payload, indent=4, default=str, ensure_ascii=False)
             
