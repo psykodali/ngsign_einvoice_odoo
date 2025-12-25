@@ -40,12 +40,9 @@ class NGSignClient:
         if cc_email:
             payload['ccEmail'] = cc_email
         
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            raise UserError(_("Error creating SEAL transaction: %s") % str(e))
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
 
     def check_status(self, uuid):
         """
@@ -53,12 +50,9 @@ class NGSignClient:
         """
         url = f"{self.api_url}/protected/invoice/check/{uuid}"
         headers = self._get_headers()
-        try:
-            response = requests.post(url, headers=headers)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            raise UserError(_("Error checking status: %s") % str(e))
+        response = requests.post(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
     def download_pdf(self, uuid):
         """
@@ -66,12 +60,9 @@ class NGSignClient:
         """
         url = f"{self.api_url}/protected/invoice/pdf/{uuid}"
         headers = self._get_headers()
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            return response.content # Returns bytes
-        except Exception as e:
-            raise UserError(_("Error downloading PDF: %s") % str(e))
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.content # Returns bytes
 
     def get_transaction_details(self, uuid):
         """
@@ -80,9 +71,6 @@ class NGSignClient:
         """
         url = f"{self.api_url}/any/invoice/{uuid}"
         headers = self._get_headers()
-        try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            raise UserError(_("Error getting transaction details: %s") % str(e))
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()

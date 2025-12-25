@@ -428,7 +428,24 @@ class AccountMove(models.Model):
             
         except Exception as e:
             self.write({'ngsign_status': 'error'})
-            raise UserError(_("Failed to sign invoice(s): %s") % str(e))
+            
+            error_msg = str(e)
+            
+            # Check if debug is enabled
+            enable_debug = self.env['ir.config_parameter'].sudo().get_param('ngsign.enable_debug_button')
+            if enable_debug and hasattr(e, 'response') and e.response is not None:
+                try:
+                    # Extract response details
+                    response_body = e.response.text
+                    request_url = e.response.url
+                    status_code = e.response.status_code
+                    
+                    debug_info = f"\n\n--- NGSign Debug Info ---\nURL: {request_url}\nStatus: {status_code}\nResponse: {response_body}"
+                    error_msg += debug_info
+                except Exception as debug_e:
+                    error_msg += f"\n(Failed to extract debug info: {debug_e})"
+
+            raise UserError(_("Failed to sign invoice(s): %s") % error_msg)
 
     def action_check_ngsign_status(self):
         self.ensure_one()
