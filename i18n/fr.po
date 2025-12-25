@@ -55,6 +55,13 @@ msgstr "Brouillon"
 msgid "Pending"
 msgstr "En attente"
 
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__signed_ngsign
+msgid "Signed"
+msgstr "Signé"
+
+
 #. module: ngsign_einvoice_odoo
 #: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__account_move__ngsign_status__signed
 msgid "Signed"
