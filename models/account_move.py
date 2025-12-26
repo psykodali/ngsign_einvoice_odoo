@@ -492,8 +492,8 @@ class AccountMove(models.Model):
                 ], limit=1)
 
                 if report_action:
-                    lang = self.partner_id.lang or 'fr_FR'
-                    pdf_content, _ = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, move.ids)
+                    lang = move.partner_id.lang or 'fr_FR'
+                    pdf_content, _format = self.env['ir.actions.report'].with_context(lang=lang).sudo()._render_qweb_pdf(report_action, move.ids)
                     
                     # Save as temporary attachment
                     attachment_name = f"{move.name}_ngsign_prepare.pdf"
