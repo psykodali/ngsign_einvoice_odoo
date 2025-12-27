@@ -4,15 +4,32 @@
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
             <t t-if="ngsign_config['use_v2'] and (o.ngsign_status == 'TTN Signed' or (o.ngsign_ttn_qr_code and o.ngsign_ttn_reference))">
-                <!-- QR Code (Fixed position relative to page) -->
-                <div t-attf-style="position: fixed; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999;">
-                    <img t-if="o.ngsign_ttn_reference" t-att-src="'/report/barcode/?type=QR&amp;value=%s&amp;width=100&amp;height=100' % o.ngsign_ttn_reference" style="width: 100%; height: 100%;"/>
-                </div>
-                <!-- TTN Reference (Fixed position) -->
-                <div t-attf-style="position: fixed; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
-                    <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
-                    <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
-                </div>
+                <t t-if="ngsign_config.get('qr_position_type') == 'custom'">
+                    <!-- QR Code (Fixed position relative to page) -->
+                    <div t-attf-style="position: fixed; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999;">
+                        <img t-if="o.ngsign_ttn_reference" t-att-src="'/report/barcode/?type=QR&amp;value=%s&amp;width=100&amp;height=100' % o.ngsign_ttn_reference" style="width: 100%; height: 100%;"/>
+                    </div>
+                    <!-- TTN Reference (Fixed position) -->
+                    <div t-attf-style="position: fixed; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
+                        <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
+                        <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
+                    </div>
+                </t>
+                <t t-else="">
+                    <!-- Builtin Position (Flow layout) -->
+                    <div class="row mt-4 mb-4">
+                         <div class="col-8">
+                            <!-- Left empty to push QR to right or keep it right aligned if desired -->
+                        </div>
+                        <div class="col-4 text-center">
+                            <img t-if="o.ngsign_ttn_reference" t-att-src="'/report/barcode/?type=QR&amp;value=%s&amp;width=100&amp;height=100' % o.ngsign_ttn_reference" style="width: 30mm; height: 30mm;"/>
+                            <div style="font-size: 10pt; margin-top: 5px;">
+                                <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
+                                <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
             </t>
         </xpath>
     </template>

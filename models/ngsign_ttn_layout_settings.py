@@ -12,6 +12,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
 
     # Company-specific related fields
     # Company-specific related fields
+    ngsign_qr_position_type = fields.Selection(
+        related='company_id.ngsign_qr_position_type',
+        readonly=False,
+        string='Position Type'
+    )
     ngsign_qr_position_x = fields.Integer(
         related='company_id.ngsign_qr_position_x', 
         readonly=False, 
@@ -154,6 +159,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     
                     # 2. Update Company Settings with current Wizard values so report picks them up
                     company.write({
+                        'ngsign_qr_position_type': record.ngsign_qr_position_type,
                         'ngsign_qr_position_x': record.ngsign_qr_position_x,
                         'ngsign_qr_position_y': record.ngsign_qr_position_y,
                         'ngsign_qr_size': record.ngsign_qr_size,
@@ -213,6 +219,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         """Save and close the wizard - save fields to company"""
         company = self.env.company
         company.sudo().write({
+            'ngsign_qr_position_type': self.ngsign_qr_position_type,
             'ngsign_qr_position_x': self.ngsign_qr_position_x,
             'ngsign_qr_position_y': self.ngsign_qr_position_y,
             'ngsign_qr_size': self.ngsign_qr_size,

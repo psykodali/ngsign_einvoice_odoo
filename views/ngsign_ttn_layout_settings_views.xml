@@ -15,6 +15,12 @@
                 <group>
                     <!-- QR Code Settings -->
                     <div class="row mt16">
+                        <div class="col-12">
+                            <label for="ngsign_qr_position_type" class="o_form_label">Position Type</label>
+                            <field name="ngsign_qr_position_type" widget="radio"/>
+                        </div>
+                    </div>
+                    <div class="row mt16" invisible="ngsign_qr_position_type == 'builtin'">
                         <div class="col-6">
                             <label for="ngsign_qr_position_x" class="o_form_label">QR X Position (mm)</label>
                             <field name="ngsign_qr_position_x"/>
@@ -33,7 +39,7 @@
 
                     <div class="o_horizontal_separator mt32">Reference Label Configuration</div>
                     <!-- Label Settings -->
-                    <div class="row mt16">
+                    <div class="row mt16" invisible="ngsign_qr_position_type == 'builtin'">
                         <div class="col-6">
                             <label for="ngsign_label_position_x" class="o_form_label">Label X Position (mm)</label>
                             <field name="ngsign_label_position_x"/>

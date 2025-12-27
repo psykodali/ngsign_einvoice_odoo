@@ -8,12 +8,13 @@
             <xpath expr="//group[@name='footer_details']" position="after">
                 <group string="NGSign / TTN Layout">
                     <group>
-                        <field name="ngsign_qr_position_x"/>
-                        <field name="ngsign_qr_position_y"/>
+                        <field name="ngsign_qr_position_type"/>
+                        <field name="ngsign_qr_position_x" invisible="ngsign_qr_position_type == 'builtin'"/>
+                        <field name="ngsign_qr_position_y" invisible="ngsign_qr_position_type == 'builtin'"/>
                     </group>
                     <group>
-                        <field name="ngsign_label_position_x"/>
-                        <field name="ngsign_label_position_y"/>
+                        <field name="ngsign_label_position_x" invisible="ngsign_qr_position_type == 'builtin'"/>
+                        <field name="ngsign_label_position_y" invisible="ngsign_qr_position_type == 'builtin'"/>
                     </group>
                 </group>
             </xpath>
