@@ -1,9 +1,13 @@
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 import base64
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class NGSignTTNLayoutSettings(models.TransientModel):
     _name = 'ngsign.ttn.layout.settings'
+
     _description = 'TTN Layout Configuration'
 
     # Company-specific related fields
@@ -133,8 +137,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
                         
                 except Exception as e:
-                     import logging
-                     _logger = logging.getLogger(__name__)
                      _logger.error(f"Error rendering PDF preview: {str(e)}")
                      error_message = str(e)
                 finally:
@@ -142,6 +144,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     try:
                         config.set_param('ngsign.use_v2_endpoint', old_v2_param)
                         company.write(old_company_vals)
+                        # Only write back what is necessary and safe
                         sample_invoice.write(old_invoice_vals)
                     except Exception as revert_e:
                         _logger.error(f"Failed to revert preview changes: {revert_e}")
