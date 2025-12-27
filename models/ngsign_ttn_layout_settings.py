@@ -48,6 +48,21 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
     
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(NGSignTTNLayoutSettings, self).default_get(fields_list)
+        company = self.env.company
+        if 'ngsign_qr_position_x' in fields_list:
+            defaults['ngsign_qr_position_x'] = company.ngsign_qr_position_x
+        if 'ngsign_qr_position_y' in fields_list:
+            defaults['ngsign_qr_position_y'] = company.ngsign_qr_position_y
+        if 'ngsign_label_position_x' in fields_list:
+            defaults['ngsign_label_position_x'] = company.ngsign_label_position_x
+        if 'ngsign_label_position_y' in fields_list:
+            defaults['ngsign_label_position_y'] = company.ngsign_label_position_y
+            
+        return defaults
+
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
     def _compute_preview_html(self):
@@ -85,7 +100,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         })
                         
                         # 3. Mock NGSign data on the invoice record
-                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAJYAAACWAQMAAAAGz+OhAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAJElEQVRIie3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAABwJjCgAAEx/46RAAAAAElFTkSuQmCC'
+                        # Better Dummy QR (Black Square) to ensure visibility
+                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAADIAAAAyAQMAAAAk8RryAAAABlBMVEUAAAD///+l2Z/dAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAIklEQVQDQmMwnz6Dgf//4/9/4P/C/4f/9/8f/X/o/0P/HwIA+0olw/6+4zEAAAAASUVORK5CYII='
                         
                         sample_invoice.write({
                             'ngsign_status': 'TTN Signed',
