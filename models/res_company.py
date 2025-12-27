@@ -6,7 +6,14 @@ class ResCompany(models.Model):
     ngsign_qr_position_type = fields.Selection([
         ('custom', 'Custom Coordinates'),
         ('builtin', 'Builtin Position')
-    ], string='QR Code Position Type', default='custom')
+    ], string='QR Code Position Type', compute='_compute_ngsign_qr_temp', inverse='_inverse_ngsign_qr_temp', store=False)
+
+    def _compute_ngsign_qr_temp(self):
+        for record in self:
+            record.ngsign_qr_position_type = 'custom'
+
+    def _inverse_ngsign_qr_temp(self):
+        pass
 
     ngsign_qr_position_x = fields.Integer(string='TTN QR Position X (mm)', default=10)
     ngsign_qr_position_y = fields.Integer(string='TTN QR Position Y (mm)', default=10)
