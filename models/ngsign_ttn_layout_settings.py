@@ -14,8 +14,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     ngsign_qr_position_type = fields.Selection(
         related='company_id.ngsign_qr_position_type',
         readonly=False,
-        string='Position Type',
-        required=True
+        string='Position Type'
     )
     ngsign_qr_position_x = fields.Integer(
         related='company_id.ngsign_qr_position_x', 

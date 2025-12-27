@@ -6,7 +6,7 @@ class ResCompany(models.Model):
     ngsign_qr_position_type = fields.Selection([
         ('custom', 'Custom Coordinates'),
         ('builtin', 'Builtin Position')
-    ], string='QR Code Position Type', default='custom', required=True)
+    ], string='QR Code Position Type', default='custom')
 
     ngsign_qr_position_x = fields.Integer(string='TTN QR Position X (mm)', default=10)
     ngsign_qr_position_y = fields.Integer(string='TTN QR Position Y (mm)', default=10)
