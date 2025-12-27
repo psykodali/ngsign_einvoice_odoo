@@ -60,14 +60,22 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             defaults['ngsign_qr_position_x'] = company.ngsign_qr_position_x
         if 'ngsign_qr_position_y' in fields_list:
             defaults['ngsign_qr_position_y'] = company.ngsign_qr_position_y
+        if 'ngsign_qr_size' in fields_list:
+            defaults['ngsign_qr_size'] = company.ngsign_qr_size
+            
         if 'ngsign_label_position_x' in fields_list:
             defaults['ngsign_label_position_x'] = company.ngsign_label_position_x
         if 'ngsign_label_position_y' in fields_list:
             defaults['ngsign_label_position_y'] = company.ngsign_label_position_y
+        if 'ngsign_label_width' in fields_list:
+            defaults['ngsign_label_width'] = company.ngsign_label_width
+        if 'ngsign_label_text' in fields_list:
+            defaults['ngsign_label_text'] = company.ngsign_label_text
             
         return defaults
 
-    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
+    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
+                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text',
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
     def _compute_preview_html(self):
         for record in self:
@@ -97,8 +105,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 old_company_vals = {
                     'ngsign_qr_position_x': company.ngsign_qr_position_x,
                     'ngsign_qr_position_y': company.ngsign_qr_position_y,
+                    'ngsign_qr_size': company.ngsign_qr_size,
                     'ngsign_label_position_x': company.ngsign_label_position_x,
                     'ngsign_label_position_y': company.ngsign_label_position_y,
+                    'ngsign_label_width': company.ngsign_label_width,
+                    'ngsign_label_text': company.ngsign_label_text,
                 }
                 
                 old_invoice_vals = {
@@ -115,8 +126,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     company.write({
                         'ngsign_qr_position_x': record.ngsign_qr_position_x,
                         'ngsign_qr_position_y': record.ngsign_qr_position_y,
+                        'ngsign_qr_size': record.ngsign_qr_size,
                         'ngsign_label_position_x': record.ngsign_label_position_x,
                         'ngsign_label_position_y': record.ngsign_label_position_y,
+                        'ngsign_label_width': record.ngsign_label_width,
+                        'ngsign_label_text': record.ngsign_label_text,
                     })
                     
                     # 3. Mock NGSign data on the invoice record
@@ -170,7 +184,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         company.sudo().write({
             'ngsign_qr_position_x': self.ngsign_qr_position_x,
             'ngsign_qr_position_y': self.ngsign_qr_position_y,
+            'ngsign_qr_size': self.ngsign_qr_size,
             'ngsign_label_position_x': self.ngsign_label_position_x,
             'ngsign_label_position_y': self.ngsign_label_position_y,
+            'ngsign_label_width': self.ngsign_label_width,
+            'ngsign_label_text': self.ngsign_label_text,
         })
         return {'type': 'ir.actions.act_window_close'}
+```

@@ -13,14 +13,46 @@
                     </group>
                 </group>
                 <group>
-                    <group string="QR Code Position">
-                        <field name="ngsign_qr_position_x"/>
-                        <field name="ngsign_qr_position_y"/>
-                    </group>
-                    <group string="TTN Label Position">
-                        <field name="ngsign_label_position_x"/>
-                        <field name="ngsign_label_position_y"/>
-                    </group>
+                    <!-- QR Code Settings -->
+                    <div class="row mt16">
+                        <div class="col-6">
+                            <label for="ngsign_qr_position_x" class="o_form_label">QR X Position (mm)</label>
+                            <field name="ngsign_qr_position_x"/>
+                        </div>
+                        <div class="col-6">
+                            <label for="ngsign_qr_position_y" class="o_form_label">QR Y Position (mm)</label>
+                            <field name="ngsign_qr_position_y"/>
+                        </div>
+                    </div>
+                    <div class="row mt8">
+                        <div class="col-6">
+                            <label for="ngsign_qr_size" class="o_form_label">QR Size (mm)</label>
+                            <field name="ngsign_qr_size"/>
+                        </div>
+                    </div>
+
+                    <div class="o_horizontal_separator mt32">Reference Label Configuration</div>
+                    <!-- Label Settings -->
+                    <div class="row mt16">
+                        <div class="col-6">
+                            <label for="ngsign_label_position_x" class="o_form_label">Label X Position (mm)</label>
+                            <field name="ngsign_label_position_x"/>
+                        </div>
+                        <div class="col-6">
+                            <label for="ngsign_label_position_y" class="o_form_label">Label Y Position (mm)</label>
+                            <field name="ngsign_label_position_y"/>
+                        </div>
+                    </div>
+                    <div class="row mt8">
+                        <div class="col-6">
+                            <label for="ngsign_label_text" class="o_form_label">Optional Text Prefix</label>
+                            <field name="ngsign_label_text" placeholder="e.g. TTN ID:"/>
+                        </div>
+                        <div class="col-6">
+                            <label for="ngsign_label_width" class="o_form_label">Label Max Width (mm)</label>
+                            <field name="ngsign_label_width"/>
+                        </div>
+                    </div>
                 </group>
                 <footer>
                     <button string="Save" type="object" name="action_save" class="btn-primary"/>

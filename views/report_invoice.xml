@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Inject overlays into the Global Standard Header to ensure absolute positioning -->
-    <template id="external_layout_standard_inherit_ngsign" inherit_id="web.external_layout_standard">
-        <xpath expr="//div[hasclass('header')]" position="inside">
-            <t t-if="o and (o._name == 'account.move')">
-                <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
-                <t t-if="ngsign_config['use_v2'] and (o.ngsign_status == 'TTN Signed' or (o.ngsign_ttn_qr_code and o.ngsign_ttn_reference))">
-                    <!-- QR Code & Label (Absolute in Header = Relative to Page Top-Left) -->
-                    <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; z-index: 1000;">
-                        <img t-if="o.ngsign_ttn_qr_code" t-att-src="'data:image/png;base64,%s' % o.ngsign_ttn_qr_code.decode('utf-8')" style="width: 30mm; height: 30mm;"/>
-                    </div>
-                    <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; z-index: 1000; font-size: 10px;">
-                        <span t-field="o.ngsign_ttn_reference"/>
-                    </div>
-                </t>
+    <template id="report_invoice_document_inherit_ngsign" inherit_id="account.report_invoice_document">
+        <xpath expr="//div[hasclass('page')]" position="inside">
+            <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
+            <t t-if="ngsign_config['use_v2'] and (o.ngsign_status == 'TTN Signed' or (o.ngsign_ttn_qr_code and o.ngsign_ttn_reference))">
+                <!-- QR Code (Fixed position relative to page) -->
+                <div t-attf-style="position: fixed; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 1000;">
+                    <img t-if="o.ngsign_ttn_qr_code" t-att-src="'data:image/png;base64,%s' % o.ngsign_ttn_qr_code.decode('utf-8')" style="width: 100%; height: 100%;"/>
+                </div>
+                <!-- TTN Reference (Fixed position) -->
+                <div t-attf-style="position: fixed; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 1000; font-size: 10px;">
+                    <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
+                    <span t-field="o.ngsign_ttn_reference"/>
+                </div>
             </t>
         </xpath>
     </template>
