@@ -6,7 +6,7 @@
             <t t-if="ngsign_config['use_v2'] and (o.ngsign_status == 'TTN Signed' or (o.ngsign_ttn_qr_code and o.ngsign_ttn_reference))">
                 <!-- QR Code -->
                 <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; z-index: 1000;">
-                    <img t-if="o.ngsign_ttn_qr_code" t-att-src="'data:image/png;base64,%s' % to_text(o.ngsign_ttn_qr_code)" style="width: 30mm; height: 30mm;"/>
+                    <img t-if="o.ngsign_ttn_qr_code" t-att-src="'data:image/png;base64,%s' % o.ngsign_ttn_qr_code.decode('utf-8')" style="width: 30mm; height: 30mm;"/>
                 </div>
                 <!-- TTN Reference -->
                 <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; z-index: 1000; font-size: 10px;">
