@@ -1,0 +1,100 @@
+from odoo import models, fields, api
+
+class NGSignTTNLayoutSettings(models.TransientModel):
+    _name = 'ngsign.ttn.layout.settings'
+    _description = 'TTN Layout Configuration'
+
+    # Company-specific related fields
+    ngsign_qr_position_x = fields.Integer(
+        related='company_id.ngsign_qr_position_x', 
+        readonly=False, 
+        string='QR Position X (mm)',
+        help='Horizontal position of the QR code from the left edge'
+    )
+    ngsign_qr_position_y = fields.Integer(
+        related='company_id.ngsign_qr_position_y', 
+        readonly=False, 
+        string='QR Position Y (mm)',
+        help='Vertical position of the QR code from the top edge'
+    )
+    ngsign_label_position_x = fields.Integer(
+        related='company_id.ngsign_label_position_x', 
+        readonly=False, 
+        string='Label Position X (mm)',
+        help='Horizontal position of the TTN reference label from the left edge'
+    )
+    ngsign_label_position_y = fields.Integer(
+        related='company_id.ngsign_label_position_y', 
+        readonly=False, 
+        string='Label Position Y (mm)',
+        help='Vertical position of the TTN reference label from the top edge'
+    )
+    
+    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
+    
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html')
+    
+    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y')
+    def _compute_preview_html(self):
+        for record in self:
+            # A4 dimensions: 210mm x 297mm
+            # Scale factor for display (1mm = 2px)
+            scale = 2
+            page_width = 210 * scale
+            page_height = 297 * scale
+            
+            qr_x = (record.ngsign_qr_position_x or 10) * scale
+            qr_y = (record.ngsign_qr_position_y or 10) * scale
+            label_x = (record.ngsign_label_position_x or 150) * scale
+            label_y = (record.ngsign_label_position_y or 10) * scale
+            
+            # QR code is typically 30mm
+            qr_size = 30 * scale
+            
+            record.preview_html = f'''
+            <div style="position: relative; width: {page_width}px; height: {page_height}px; border: 2px solid #ccc; background: white; margin: 20px auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <!-- Page label -->
+                <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: #999; font-size: 12px;">
+                    A4 Invoice Preview (210mm × 297mm)
+                </div>
+                
+                <!-- QR Code marker -->
+                <div style="position: absolute; left: {qr_x}px; top: {qr_y}px; width: {qr_size}px; height: {qr_size}px; border: 3px dashed #00a09d; background: rgba(0,160,157,0.1); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #00a09d; font-weight: bold;">
+                    QR<br/>Code
+                </div>
+                <div style="position: absolute; left: {qr_x}px; top: {qr_y + qr_size + 5}px; font-size: 10px; color: #00a09d; white-space: nowrap;">
+                    ({record.ngsign_qr_position_x or 10}mm, {record.ngsign_qr_position_y or 10}mm)
+                </div>
+                
+                <!-- Label marker -->
+                <div style="position: absolute; left: {label_x}px; top: {label_y}px; padding: 8px 12px; border: 3px dashed #875A7B; background: rgba(135,90,123,0.1); font-size: 11px; color: #875A7B; font-weight: bold; white-space: nowrap;">
+                    TTN Reference Label
+                </div>
+                <div style="position: absolute; left: {label_x}px; top: {label_y + 35}px; font-size: 10px; color: #875A7B; white-space: nowrap;">
+                    ({record.ngsign_label_position_x or 150}mm, {record.ngsign_label_position_y or 10}mm)
+                </div>
+                
+                <!-- Grid lines for reference -->
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                    {self._generate_grid_lines(page_width, page_height, scale)}
+                </div>
+            </div>
+            <div style="text-align: center; color: #666; font-size: 12px; margin-top: 10px;">
+                <strong>Note:</strong> Positions are measured from the top-left corner of the page
+            </div>
+            '''
+    
+    def _generate_grid_lines(self, width, height, scale):
+        """Generate grid lines every 50mm for reference"""
+        lines = []
+        step = 50 * scale  # 50mm grid
+        
+        # Vertical lines
+        for x in range(int(step), int(width), int(step)):
+            lines.append(f'<div style="position: absolute; left: {x}px; top: 0; width: 1px; height: 100%; background: rgba(200,200,200,0.3);"></div>')
+        
+        # Horizontal lines
+        for y in range(int(step), int(height), int(step)):
+            lines.append(f'<div style="position: absolute; left: 0; top: {y}px; width: 100%; height: 1px; background: rgba(200,200,200,0.3);"></div>')
+        
+        return ''.join(lines)

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ngsign_ttn_layout_settings_form" model="ir.ui.view">
+        <field name="name">ngsign.ttn.layout.settings.form</field>
+        <field name="model">ngsign.ttn.layout.settings</field>
+        <field name="arch" type="xml">
+            <form string="TTN Layout Configuration">
+                <group>
+                    <group string="Preview">
+                        <field name="preview_html" nolabel="1" widget="html"/>
+                    </group>
+                </group>
+                <group>
+                    <group string="QR Code Position">
+                        <field name="ngsign_qr_position_x"/>
+                        <field name="ngsign_qr_position_y"/>
+                    </group>
+                    <group string="TTN Label Position">
+                        <field name="ngsign_label_position_x"/>
+                        <field name="ngsign_label_position_y"/>
+                    </group>
+                </group>
+                <footer>
+                    <button string="Save" type="object" name="action_save" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ngsign_ttn_layout_settings" model="ir.actions.act_window">
+        <field name="name">TTN Layout Configuration</field>
+        <field name="res_model">ngsign.ttn.layout.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
