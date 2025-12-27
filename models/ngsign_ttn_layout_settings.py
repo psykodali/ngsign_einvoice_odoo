@@ -47,153 +47,71 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background')
     def _compute_preview_html(self):
         for record in self:
-            # A4 dimensions: 210mm x 297mm
-            # Scale factor for display (1mm = 2.5px for better visibility)
-            scale = 2.5
-            page_width = 210 * scale
-            page_height = 297 * scale
+            # Try to get a recent invoice to use as preview
+            sample_invoice = self.env['account.move'].search([
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('company_id', '=', record.company_id.id)
+            ], limit=1, order='id desc')
             
+            if not sample_invoice:
+                # If no invoice exists, show a message
+                record.preview_html = '''
+                    <div style="padding: 50px; text-align: center; color: #666;">
+                        <h3>No Invoice Available for Preview</h3>
+                        <p>Please create and post at least one invoice to see the preview.</p>
+                        <p>The QR code and label will be positioned according to your settings.</p>
+                    </div>
+                '''
+                continue
+            
+            # Get the invoice report
+            report = self.env.ref('account.account_invoices')
+            
+            # Render the invoice HTML
+            try:
+                html_content, _ = report._render_qweb_html(sample_invoice.ids)
+                html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
+            except:
+                html_str = '<div style="padding: 50px; text-align: center; color: #666;">Unable to render invoice preview</div>'
+            
+            # Scale and positioning for overlay
+            scale = 2.5  # 1mm = 2.5px
             qr_x = (record.ngsign_qr_position_x or 10) * scale
             qr_y = (record.ngsign_qr_position_y or 10) * scale
             label_x = (record.ngsign_label_position_x or 150) * scale
             label_y = (record.ngsign_label_position_y or 10) * scale
-            
-            # QR code is typically 30mm
             qr_size = 30 * scale
             
-            # Get company colors and styling
+            # Get primary color for overlay
             primary_color = record.primary_color or '#875A7B'
-            secondary_color = record.secondary_color or '#666666'
-            company_name = record.company_name or 'Your Company'
             
-            # Get company logo as base64
-            logo_html = ''
-            if record.company_logo:
-                logo_html = f'<img src="data:image/png;base64,{record.company_logo.decode("utf-8") if isinstance(record.company_logo, bytes) else record.company_logo}" style="max-height: 60px; max-width: 150px;"/>'
-            else:
-                logo_html = f'<div style="font-size: 24px; font-weight: bold; color: {primary_color};">{company_name}</div>'
-            
-            # Font family based on selection
-            font_family = 'Arial, sans-serif'
-            if record.font:
-                font_map = {
-                    'Lato': 'Lato, sans-serif',
-                    'Roboto': 'Roboto, sans-serif',
-                    'Open_Sans': 'Open Sans, sans-serif',
-                    'Montserrat': 'Montserrat, sans-serif',
-                    'Oswald': 'Oswald, sans-serif',
-                    'Raleway': 'Raleway, sans-serif',
-                }
-                font_family = font_map.get(record.font, font_family)
-            
-            # Background styling based on layout_background
-            page_bg_style = 'background: white;'
-            if record.layout_background == 'Geometric':
-                page_bg_style = f'background: linear-gradient(135deg, {primary_color}15 0%, white 100%);'
-            elif record.layout_background == 'Custom':
-                page_bg_style = f'background: linear-gradient(to bottom, white 0%, {primary_color}08 100%);'
-            
+            # Wrap the rendered invoice in a container with overlays
             record.preview_html = f'''
-            <div style="position: relative; width: {page_width}px; height: {page_height}px; border: 1px solid #ddd; {page_bg_style} margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
-                
-                <!-- Invoice Template Background -->
-                <div style="padding: 40px; font-family: {font_family}; font-size: 11px; color: #333;">
-                    
-                    <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid {primary_color}; padding-bottom: 15px;">
-                        <div>
-                            {logo_html}
-                            <div style="margin-top: 8px; font-size: 10px; color: {secondary_color};">
-                                123 Business Street<br/>
-                                City, Country 12345<br/>
-                                Phone: +1 234 567 890
-                            </div>
+            <div style="position: relative; margin: 0 auto; max-width: 900px;">
+                <!-- Rendered Invoice -->
+                <div style="position: relative; transform: scale(0.8); transform-origin: top left; width: 125%;">
+                    <div style="position: relative; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        {html_str}
+                        
+                        <!-- QR Code Overlay -->
+                        <div style="position: absolute; left: {qr_x}px; top: {qr_y}px; width: {qr_size}px; height: {qr_size}px; border: 3px dashed #00a09d; background: rgba(0,160,157,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #00a09d; font-weight: bold; z-index: 1000; pointer-events: none;">
+                            <div>TTN</div>
+                            <div>QR Code</div>
+                            <div style="font-size: 8px; margin-top: 3px;">({record.ngsign_qr_position_x or 10}, {record.ngsign_qr_position_y or 10})</div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 28px; font-weight: bold; color: {primary_color};">INVOICE</div>
-                            <div style="margin-top: 5px; font-size: 10px; color: {secondary_color};">
-                                INV/2025/00001<br/>
-                                Date: 27/12/2025
-                            </div>
+                        
+                        <!-- Label Overlay -->
+                        <div style="position: absolute; left: {label_x}px; top: {label_y}px; padding: 8px 12px; border: 3px dashed {primary_color}; background: rgba(135,90,123,0.15); font-size: 10px; color: {primary_color}; font-weight: bold; white-space: nowrap; z-index: 1000; pointer-events: none;">
+                            TTN: ABC123XYZ
+                            <div style="font-size: 8px; margin-top: 2px;">({record.ngsign_label_position_x or 150}, {record.ngsign_label_position_y or 10})</div>
                         </div>
-                    </div>
-                    
-                    <!-- Customer Info -->
-                    <div style="margin-bottom: 25px;">
-                        <div style="font-weight: bold; margin-bottom: 8px; color: {primary_color};">Bill To:</div>
-                        <div style="font-size: 10px; color: {secondary_color};">
-                            Customer Name<br/>
-                            456 Customer Avenue<br/>
-                            City, Country 54321
-                        </div>
-                    </div>
-                    
-                    <!-- Invoice Lines Table -->
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10px;">
-                        <thead>
-                            <tr style="background: #f5f5f5; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;">
-                                <th style="padding: 8px; text-align: left; color: {primary_color};">Description</th>
-                                <th style="padding: 8px; text-align: right; color: {primary_color};">Quantity</th>
-                                <th style="padding: 8px; text-align: right; color: {primary_color};">Unit Price</th>
-                                <th style="padding: 8px; text-align: right; color: {primary_color};">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 8px;">Product or Service</td>
-                                <td style="padding: 8px; text-align: right;">2.00</td>
-                                <td style="padding: 8px; text-align: right;">€50.00</td>
-                                <td style="padding: 8px; text-align: right;">€100.00</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 8px;">Another Product</td>
-                                <td style="padding: 8px; text-align: right;">1.00</td>
-                                <td style="padding: 8px; text-align: right;">€75.00</td>
-                                <td style="padding: 8px; text-align: right;">€75.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <!-- Totals -->
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-                        <div style="width: 200px;">
-                            <div style="display: flex; justify-content: space-between; padding: 5px 0; font-size: 10px;">
-                                <span>Subtotal:</span>
-                                <span>€175.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 5px 0; font-size: 10px;">
-                                <span>Tax (20%):</span>
-                                <span>€35.00</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; font-size: 12px; border-top: 2px solid {primary_color}; margin-top: 5px; color: {primary_color};">
-                                <span>Total:</span>
-                                <span>€210.00</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Footer -->
-                    <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 9px; color: #999; text-align: center;">
-                        Thank you for your business
                     </div>
                 </div>
                 
-                <!-- QR Code Overlay -->
-                <div style="position: absolute; left: {qr_x}px; top: {qr_y}px; width: {qr_size}px; height: {qr_size}px; border: 3px dashed #00a09d; background: rgba(0,160,157,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #00a09d; font-weight: bold; z-index: 10;">
-                    <div>TTN</div>
-                    <div>QR Code</div>
-                    <div style="font-size: 8px; margin-top: 3px;">({record.ngsign_qr_position_x or 10}, {record.ngsign_qr_position_y or 10})</div>
-                </div>
-                
-                <!-- Label Overlay -->
-                <div style="position: absolute; left: {label_x}px; top: {label_y}px; padding: 8px 12px; border: 3px dashed {primary_color}; background: rgba(135,90,123,0.15); font-size: 10px; color: {primary_color}; font-weight: bold; white-space: nowrap; z-index: 10;">
-                    TTN: ABC123XYZ
-                    <div style="font-size: 8px; margin-top: 2px;">({record.ngsign_label_position_x or 150}, {record.ngsign_label_position_y or 10})</div>
-                </div>
-                
-                <!-- Info overlay -->
-                <div style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 8px 16px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 10px; color: #666; z-index: 5;">
-                    <strong>Preview:</strong> Positions shown in millimeters from top-left corner
+                <!-- Info bar -->
+                <div style="margin-top: 20px; text-align: center; background: rgba(255,255,255,0.95); padding: 12px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 11px; color: #666;">
+                    <strong>Preview:</strong> Invoice #{sample_invoice.name} - Positions shown in millimeters from top-left corner
                 </div>
             </div>
             '''
