@@ -95,7 +95,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         _logger.error(f"Error rendering invoice preview: {str(e)}")
                         background_content = f'<div style="padding: 50px; text-align: center; color: #666;"><h3>Unable to render invoice preview</h3><p style="color: #999; font-size: 12px;">Error: {str(e)}</p></div>'
                 else:
-                else:
                     background_content = '''
                         <div style="padding: 50px; text-align: center; color: #666; background: #f9f9f9; border-radius: 8px;">
                             <h3 style="margin-top: 0;">No Invoice Available for Preview</h3>
