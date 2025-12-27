@@ -99,22 +99,29 @@ class AccountMove(models.Model):
 
     def get_ngsign_print_config(self):
         """
-        Helper to fetch print configuration for QWeb report.
-        Returns a dict with positioning and visibility flags.
-        """
-        params = self.env['ir.config_parameter'].sudo()
-        use_v2 = params.get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+        Returns configuration for the QR code and label positioning in the print view.
+        This is called from the QWeb report template.
         
-        # Use company-specific settings for layout
-        company = self.company_id or self.env.company
+        Coordinates are adjusted to account for page margins, so that user coordinates
+        (0,0) correspond to the absolute top-left of the physical page.
+        """
+        self.ensure_one()
+        company = self.company_id
+        use_v2 = self.env['ir.config_parameter'].sudo().get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+        
+        # Get paper format margins to offset coordinates
+        # This allows user to specify (0,0) as the absolute page top-left
+        paperformat = company.paperformat_id or self.env.ref('base.paperformat_euro', raise_if_not_found=False)
+        margin_top = paperformat.margin_top if paperformat else 40.0
+        margin_left = paperformat.margin_left if paperformat else 7.0
         
         return {
             'use_v2': use_v2,
-            'qr_x': company.ngsign_qr_position_x,
-            'qr_y': company.ngsign_qr_position_y,
+            'qr_x': company.ngsign_qr_position_x - margin_left,
+            'qr_y': company.ngsign_qr_position_y - margin_top,
             'qr_size': company.ngsign_qr_size,
-            'label_x': company.ngsign_label_position_x,
-            'label_y': company.ngsign_label_position_y,
+            'label_x': company.ngsign_label_position_x - margin_left,
+            'label_y': company.ngsign_label_position_y - margin_top,
             'label_width': company.ngsign_label_width,
             'label_text': company.ngsign_label_text,
         }
