@@ -100,8 +100,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         })
                         
                         # 3. Mock NGSign data on the invoice record
-                        # Better Dummy QR (Black Square) to ensure visibility
-                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAADIAAAAyAQMAAAAk8RryAAAABlBMVEUAAAD///+l2Z/dAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAIklEQVQDQmMwnz6Dgf//4/9/4P/C/4f/9/8f/X/o/0P/HwIA+0olw/6+4zEAAAAASUVORK5CYII='
+                        # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
+                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
                         
                         sample_invoice.write({
                             'ngsign_status': 'TTN Signed',
