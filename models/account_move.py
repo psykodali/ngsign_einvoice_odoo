@@ -118,6 +118,33 @@ class AccountMove(models.Model):
             'label_text': company.ngsign_label_text,
             'label_font_size': company.ngsign_label_font_size,
         }
+    
+    def get_ttn_qr_code_base64(self):
+        """Generate QR code for TTN reference on-the-fly"""
+        self.ensure_one()
+        if not self.ngsign_ttn_reference:
+            return False
+        
+        try:
+            import qrcode
+            import io
+            import base64
+            
+            qr = qrcode.QRCode(version=1, box_size=10, border=4)
+            qr.add_data(self.ngsign_ttn_reference)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            
+            return base64.b64encode(buffer.getvalue()).decode('utf-8')
+        except Exception as e:
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.error(f"Error generating QR code: {e}")
+            return False
 
     def _prepare_ngsign_invoice_payload(self, include_pdf=True):
         """
