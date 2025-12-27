@@ -41,10 +41,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     layout_background = fields.Selection(related='company_id.layout_background', string='Layout Background')
     external_report_layout_id = fields.Many2one(related='company_id.external_report_layout_id', string='Document Layout')
     
-    preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background.")
+    preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background. PDF files are NOT supported.")
     preview_image_name = fields.Char(string="Image Name")
     
-    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html')
     
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
@@ -64,21 +64,21 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             background_content = ''
             
             if record.preview_image:
-                # Use uploaded image or PDF
-                is_pdf = record.preview_image_name and record.preview_image_name.lower().endswith('.pdf')
-                file_content = record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image
-                
-                if is_pdf:
-                    background_content = f'<iframe src="data:application/pdf;base64,{file_content}" width="100%" height="800px" style="border: none;"></iframe>'
-                else:
-                    background_content = f'<img src="data:image/png;base64,{file_content}" style="width: 100%; height: auto; display: block;"/>'
+                # Use uploaded image
+                background_content = f'<img src="data:image/png;base64,{record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image}" style="width: 100%; height: auto; display: block;"/>'
             else:
-                # Try to get a recent invoice to use as preview
-                sample_invoice = self.env['account.move'].search([
+                # Try to get a recent invoice to use as preview (Posted first, then Draft)
+                domain = [
                     ('move_type', '=', 'out_invoice'),
-                    ('state', '=', 'posted'),
-                    ('company_id', '=', record.company_id.id)
-                ], limit=1, order='id desc')
+                    ('company_id', '=', record.company_id.id),
+                    ('state', '!=', 'cancel')
+                ]
+                # Prefer posted invoices
+                sample_invoice = self.env['account.move'].search(domain + [('state', '=', 'posted')], limit=1, order='id desc')
+                
+                # Fallback to draft if no posted invoice found
+                if not sample_invoice:
+                    sample_invoice = self.env['account.move'].search(domain, limit=1, order='id desc')
                 
                 if sample_invoice:
                     # Get the invoice report
@@ -95,11 +95,15 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         _logger.error(f"Error rendering invoice preview: {str(e)}")
                         background_content = f'<div style="padding: 50px; text-align: center; color: #666;"><h3>Unable to render invoice preview</h3><p style="color: #999; font-size: 12px;">Error: {str(e)}</p></div>'
                 else:
+                else:
                     background_content = '''
-                        <div style="padding: 50px; text-align: center; color: #666;">
-                            <h3>No Invoice Available for Preview</h3>
-                            <p>Please create and post at least one invoice to see the preview.</p>
-                            <p>OR upload a custom image of your invoice above.</p>
+                        <div style="padding: 50px; text-align: center; color: #666; background: #f9f9f9; border-radius: 8px;">
+                            <h3 style="margin-top: 0;">No Invoice Available for Preview</h3>
+                            <p>Please create and save at least one invoice (even as draft) to see the preview.</p>
+                            <p style="margin-top: 20px;">
+                                <strong>Tip:</strong> You can also upload a custom image (PNG/JPG) of your invoice layout above.<br/>
+                                <small>PDF uploads are not supported for preview.</small>
+                            </p>
                         </div>
                     '''
             
