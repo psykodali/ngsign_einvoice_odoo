@@ -36,6 +36,27 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         help='Vertical position of the TTN reference label from the top edge'
     )
     
+    ngsign_qr_size = fields.Integer(
+        related='company_id.ngsign_qr_size',
+        readonly=False,
+        string='QR Code Size (mm)',
+        default=30
+    )
+    
+    ngsign_label_width = fields.Integer(
+        related='company_id.ngsign_label_width',
+        readonly=False,
+        string='Label Width (mm)',
+        default=50
+    )
+    
+    ngsign_label_text = fields.Char(
+        related='company_id.ngsign_label_text',
+        readonly=False,
+        string='Label Prefix Text',
+        default=''
+    )
+    
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     
     # Company layout fields
