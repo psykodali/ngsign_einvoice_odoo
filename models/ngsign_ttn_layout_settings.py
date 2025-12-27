@@ -57,6 +57,13 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         default=''
     )
     
+    ngsign_label_font_size = fields.Integer(
+        related='company_id.ngsign_label_font_size',
+        readonly=False,
+        string='Label Font Size (pt)',
+        default=10
+    )
+    
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     
     # Company layout fields
@@ -96,7 +103,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         return defaults
 
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
-                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text',
+                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size',
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
     def _compute_preview_html(self):
         for record in self:
@@ -131,6 +138,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     'ngsign_label_position_y': company.ngsign_label_position_y,
                     'ngsign_label_width': company.ngsign_label_width,
                     'ngsign_label_text': company.ngsign_label_text,
+                    'ngsign_label_font_size': company.ngsign_label_font_size,
                 }
                 
                 old_invoice_vals = {
@@ -152,6 +160,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         'ngsign_label_position_y': record.ngsign_label_position_y,
                         'ngsign_label_width': record.ngsign_label_width,
                         'ngsign_label_text': record.ngsign_label_text,
+                        'ngsign_label_font_size': record.ngsign_label_font_size,
                     })
                     
                     # 3. Mock NGSign data on the invoice record
@@ -210,5 +219,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             'ngsign_label_position_y': self.ngsign_label_position_y,
             'ngsign_label_width': self.ngsign_label_width,
             'ngsign_label_text': self.ngsign_label_text,
+            'ngsign_label_font_size': self.ngsign_label_font_size,
         })
         return {'type': 'ir.actions.act_window_close'}

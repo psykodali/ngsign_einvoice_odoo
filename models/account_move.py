@@ -124,6 +124,7 @@ class AccountMove(models.Model):
             'label_y': company.ngsign_label_position_y - margin_top,
             'label_width': company.ngsign_label_width,
             'label_text': company.ngsign_label_text,
+            'label_font_size': company.ngsign_label_font_size,
         }
 
     def _prepare_ngsign_invoice_payload(self, include_pdf=True):

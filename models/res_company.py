@@ -11,3 +11,4 @@ class ResCompany(models.Model):
     ngsign_label_position_y = fields.Integer(string='TTN Label Position Y (mm)', default=10)
     ngsign_label_width = fields.Integer(string='TTN Label Width (mm)', default=50)
     ngsign_label_text = fields.Char(string='TTN Label Text', default='')
+    ngsign_label_font_size = fields.Integer(string='TTN Label Font Size (pt)', default=10)

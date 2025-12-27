@@ -53,6 +53,12 @@
                             <field name="ngsign_label_width"/>
                         </div>
                     </div>
+                    <div class="row mt8">
+                        <div class="col-6">
+                            <label for="ngsign_label_font_size" class="o_form_label">Label Font Size (pt)</label>
+                            <field name="ngsign_label_font_size"/>
+                        </div>
+                    </div>
                 </group>
                 <footer>
                     <button string="Save" type="object" name="action_save" class="btn-primary"/>
