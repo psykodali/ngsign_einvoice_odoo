@@ -88,8 +88,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     try:
                         html_content = report._render_qweb_html(report, sample_invoice.ids)[0]
                         html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
-                        # Inject CSS to fix logo size in preview
-                        style_inject = '<style>img { max-width: 100% !important; height: auto !important; } .row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; } .col-6 { flex: 0 0 50%; max-width: 50%; } </style>'
+                        # Inject CSS to fix logo size in preview (force pixel limit)
+                        style_inject = '<style>img { max-width: 300px !important; max-height: 120px !important; object-fit: contain; } .row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; } .col-6 { flex: 0 0 50%; max-width: 50%; } </style>'
                         background_content = style_inject + html_str
                     except Exception as e:
                         import logging
