@@ -66,6 +66,9 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 sample_invoice = self.env['account.move'].search(domain, limit=1, order='id desc')
             
             if sample_invoice:
+                pdf_base64_result = None
+                error_message = None
+                
                 try:
                     # Use a Savepoint to mock data without committing
                     with self.env.cr.savepoint():
@@ -82,9 +85,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         report_action = self.env.ref('account.account_invoices')
                         pdf_content, _ = report_action.with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
                         
-                        pdf_base64 = base64.b64encode(pdf_content).decode('utf-8')
-                        
-                        record.preview_html = f'<iframe src="data:application/pdf;base64,{pdf_base64}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="900px" style="border: none;"></iframe>'
+                        # Capture result
+                        pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
                         
                         # Force rollback to prevent saving changes
                         raise UserError("Rollback")
@@ -98,7 +100,15 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                      import logging
                      _logger = logging.getLogger(__name__)
                      _logger.error(f"Error rendering PDF preview: {str(e)}")
-                     record.preview_html = f'<div style="padding: 50px; text-align: center; color: #d9534f;"><h3>Preview Error</h3><p>{str(e)}</p></div>'
+                     error_message = str(e)
+                
+                # Assign field value AFTER rollback/context exit
+                if pdf_base64_result:
+                    record.preview_html = f'<iframe src="data:application/pdf;base64,{pdf_base64_result}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="900px" style="border: none;"></iframe>'
+                elif error_message:
+                    record.preview_html = f'<div style="padding: 50px; text-align: center; color: #d9534f;"><h3>Preview Error</h3><p>{error_message}</p></div>'
+                else:
+                    record.preview_html = f'<div style="padding: 50px; text-align: center; color: #d9534f;"><h3>Preview Error</h3><p>Unknown error occurred during PDF generation.</p></div>'
             else:
                  record.preview_html = '''
                     <div style="padding: 50px; text-align: center; color: #666; background: #f9f9f9; border-radius: 8px;">
