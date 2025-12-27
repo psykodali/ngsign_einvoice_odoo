@@ -72,8 +72,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             try:
                 html_content, _ = report._render_qweb_html(sample_invoice.ids)
                 html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
-            except:
-                html_str = '<div style="padding: 50px; text-align: center; color: #666;">Unable to render invoice preview</div>'
+            except Exception as e:
+                import logging
+                _logger = logging.getLogger(__name__)
+                _logger.error(f"Error rendering invoice preview: {str(e)}")
+                html_str = f'<div style="padding: 50px; text-align: center; color: #666;"><h3>Unable to render invoice preview</h3><p style="color: #999; font-size: 12px;">Error: {str(e)}</p></div>'
             
             # Scale and positioning for overlay
             scale = 2.5  # 1mm = 2.5px
