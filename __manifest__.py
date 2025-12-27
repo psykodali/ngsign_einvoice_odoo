@@ -20,6 +20,7 @@
         'views/account_tax_views.xml',
         'views/account_payment_term_views.xml',
         'views/ngsign_template_settings_views.xml',
+        'views/base_document_layout_views.xml',
         'views/report_invoice.xml',
         'views/res_partner_views.xml',
         'views/res_partner_views.xml',

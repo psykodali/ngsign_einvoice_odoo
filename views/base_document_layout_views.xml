@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_document_layout_form_inherit_ngsign" model="ir.ui.view">
+        <field name="name">base.document.layout.form.inherit.ngsign</field>
+        <field name="model">base.document.layout</field>
+        <field name="inherit_id" ref="base.view_document_layout_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='footer_details']" position="after">
+                <group string="NGSign / TTN Layout">
+                    <group>
+                        <field name="ngsign_qr_position_x"/>
+                        <field name="ngsign_qr_position_y"/>
+                    </group>
+                    <group>
+                        <field name="ngsign_label_position_x"/>
+                        <field name="ngsign_label_position_y"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
