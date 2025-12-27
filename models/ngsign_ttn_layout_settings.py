@@ -84,53 +84,69 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 pdf_base64_result = None
                 error_message = None
                 
+                # Store original values to revert later
+                company = sample_invoice.company_id
+                config = self.env['ir.config_parameter'].sudo()
+                
+                old_v2_param = config.get_param('ngsign.use_v2_endpoint')
+                
+                old_company_vals = {
+                    'ngsign_qr_position_x': company.ngsign_qr_position_x,
+                    'ngsign_qr_position_y': company.ngsign_qr_position_y,
+                    'ngsign_label_position_x': company.ngsign_label_position_x,
+                    'ngsign_label_position_y': company.ngsign_label_position_y,
+                }
+                
+                old_invoice_vals = {
+                    'ngsign_status': sample_invoice.ngsign_status,
+                    'ngsign_ttn_reference': sample_invoice.ngsign_ttn_reference,
+                    'ngsign_ttn_qr_code': sample_invoice.ngsign_ttn_qr_code,
+                }
+                
                 try:
-                    # Use a Savepoint to mock data without committing
-                    with self.env.cr.savepoint():
-                        # 1. Force V2 Endpoint (required for report to show overlays)
-                        self.env['ir.config_parameter'].sudo().set_param('ngsign.use_v2_endpoint', 'True')
+                    # 1. Force V2 Endpoint (required for report to show overlays)
+                    config.set_param('ngsign.use_v2_endpoint', 'True')
+                    
+                    # 2. Update Company Settings with current Wizard values so report picks them up
+                    company.write({
+                        'ngsign_qr_position_x': record.ngsign_qr_position_x,
+                        'ngsign_qr_position_y': record.ngsign_qr_position_y,
+                        'ngsign_label_position_x': record.ngsign_label_position_x,
+                        'ngsign_label_position_y': record.ngsign_label_position_y,
+                    })
+                    
+                    # 3. Mock NGSign data on the invoice record
+                    # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
+                    dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+                    
+                    sample_invoice.write({
+                        'ngsign_status': 'TTN Signed',
+                        'ngsign_ttn_reference': 'ABC123XYZ-PREVIEW',
+                        'ngsign_ttn_qr_code': dummy_qr
+                    })
+                    
+                    # Render the PDF
+                    report_action = self.env.ref('account.account_invoices')
+                    pdf_content, _ = report_action.with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
+                    
+                    # Capture result
+                    pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
                         
-                        # 2. Update Company Settings with current Wizard values so report picks them up
-                        # The report calls o.get_ngsign_print_config() which reads from company
-                        sample_invoice.company_id.write({
-                            'ngsign_qr_position_x': record.ngsign_qr_position_x,
-                            'ngsign_qr_position_y': record.ngsign_qr_position_y,
-                            'ngsign_label_position_x': record.ngsign_label_position_x,
-                            'ngsign_label_position_y': record.ngsign_label_position_y,
-                        })
-                        
-                        # 3. Mock NGSign data on the invoice record
-                        # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
-                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
-                        
-                        sample_invoice.write({
-                            'ngsign_status': 'TTN Signed',
-                            'ngsign_ttn_reference': 'ABC123XYZ-PREVIEW',
-                            'ngsign_ttn_qr_code': dummy_qr
-                        })
-                        
-                        # Render the PDF
-                        report_action = self.env.ref('account.account_invoices')
-                        pdf_content, _ = report_action.with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
-                        
-                        # Capture result
-                        pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
-                        
-                        # Force rollback to prevent saving changes
-                        raise UserError("Rollback")
-                        
-                except UserError as e:
-                    if str(e) == "Rollback":
-                        pass # Expected rollback
-                    else:
-                        raise e
                 except Exception as e:
                      import logging
                      _logger = logging.getLogger(__name__)
                      _logger.error(f"Error rendering PDF preview: {str(e)}")
                      error_message = str(e)
+                finally:
+                    # Revert changes manually to avoid transaction rollback side effects on cache
+                    try:
+                        config.set_param('ngsign.use_v2_endpoint', old_v2_param)
+                        company.write(old_company_vals)
+                        sample_invoice.write(old_invoice_vals)
+                    except Exception as revert_e:
+                        _logger.error(f"Failed to revert preview changes: {revert_e}")
                 
-                # Assign field value AFTER rollback/context exit
+                # Assign field value
                 if pdf_base64_result:
                     record.preview_html = f'<iframe src="data:application/pdf;base64,{pdf_base64_result}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="900px" style="border: none;"></iframe>'
                 elif error_message:
