@@ -106,15 +106,14 @@ class AccountMove(models.Model):
         use_v2 = params.get_param('ngsign.use_v2_endpoint', 'False') == 'True'
         
         # Use company-specific settings for layout
-        # company = self.company_id or self.env.company
+        company = self.company_id or self.env.company
         
-        # Reverted to system parameters to fix boot loop
         return {
             'use_v2': use_v2,
-            'qr_x': int(params.get_param('ngsign.qr_position_x', 10)),
-            'qr_y': int(params.get_param('ngsign.qr_position_y', 10)),
-            'label_x': int(params.get_param('ngsign.label_position_x', 150)),
-            'label_y': int(params.get_param('ngsign.label_position_y', 10)),
+            'qr_x': company.ngsign_qr_position_x,
+            'qr_y': company.ngsign_qr_position_y,
+            'label_x': company.ngsign_label_position_x,
+            'label_y': company.ngsign_label_position_y,
         }
 
     def _prepare_ngsign_invoice_payload(self, include_pdf=True):
@@ -463,15 +462,15 @@ class AccountMove(models.Model):
             'clientEmail': self.partner_id.email or '',
             'invoiceTIEF': teif_invoice,
             'configuration': {
-                'qrPositionX': int(params.get_param('ngsign.qr_position_x', 10)),
-                'qrPositionY': int(params.get_param('ngsign.qr_position_y', 10)),
+                'qrPositionX': self.company_id.ngsign_qr_position_x,
+                'qrPositionY': self.company_id.ngsign_qr_position_y,
                 'qrPositionP': int(params.get_param('ngsign.qr_position_p', 0)),
                 'qrRatio': float(params.get_param('ngsign.qr_ratio', 0.5)),
                 'textPositionX': int(params.get_param('ngsign.text_position_x', 40)),
                 'textPositionY': int(params.get_param('ngsign.text_position_y', 40)),
                 'textPage': int(params.get_param('ngsign.text_page', 0)),
-                'labelPositionX': int(params.get_param('ngsign.label_position_x', 150)),
-                'labelPositionY': int(params.get_param('ngsign.label_position_y', 10)),
+                'labelPositionX': self.company_id.ngsign_label_position_x,
+                'labelPositionY': self.company_id.ngsign_label_position_y,
                 'labelPositionP': int(params.get_param('ngsign.label_position_p', 0)),
                 'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
             }
