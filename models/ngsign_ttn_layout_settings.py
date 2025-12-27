@@ -70,7 +70,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             
             # Render the invoice HTML
             try:
-                html_content, _ = report._render_qweb_html(sample_invoice.ids)
+                html_content = report._render_qweb_html(report, sample_invoice.ids)[0]
                 html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
             except Exception as e:
                 import logging
