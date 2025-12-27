@@ -39,6 +39,21 @@
                                         <label for="ngsign_use_v2_endpoint" class="col-3 o_light_label"/>
                                         <field name="ngsign_use_v2_endpoint" class="col-9"/>
                                     </div>
+                                    
+                                    <separator string="TTN Layout Configuration" class="mt16"/>
+                                    <div class="row mt8">
+                                        <label for="ngsign_qr_position_x" class="col-3 o_light_label" string="QR Position X"/>
+                                        <field name="ngsign_qr_position_x" class="col-3"/>
+                                        <label for="ngsign_qr_position_y" class="col-3 o_light_label" string="QR Position Y"/>
+                                        <field name="ngsign_qr_position_y" class="col-3"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ngsign_label_position_x" class="col-3 o_light_label" string="Label Position X"/>
+                                        <field name="ngsign_label_position_x" class="col-3"/>
+                                        <label for="ngsign_label_position_y" class="col-3 o_light_label" string="Label Position Y"/>
+                                        <field name="ngsign_label_position_y" class="col-3"/>
+                                    </div>
+                                    
                                     <div class="row mt16">
                                         <button name="action_open_template_settings" string="eInvoice template settings" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
