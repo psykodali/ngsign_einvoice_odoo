@@ -146,5 +146,12 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 '''
 
     def action_save(self):
-        """Save and close the wizard - related fields auto-save to company"""
+        """Save and close the wizard - save fields to company"""
+        company = self.env.company
+        company.sudo().write({
+            'ngsign_qr_position_x': self.ngsign_qr_position_x,
+            'ngsign_qr_position_y': self.ngsign_qr_position_y,
+            'ngsign_label_position_x': self.ngsign_label_position_x,
+            'ngsign_label_position_y': self.ngsign_label_position_y,
+        })
         return {'type': 'ir.actions.act_window_close'}
