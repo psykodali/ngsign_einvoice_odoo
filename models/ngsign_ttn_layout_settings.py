@@ -191,4 +191,3 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             'ngsign_label_text': self.ngsign_label_text,
         })
         return {'type': 'ir.actions.act_window_close'}
-```
