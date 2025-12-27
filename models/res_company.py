@@ -3,6 +3,11 @@ from odoo import models, fields
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
+    ngsign_qr_position_type = fields.Selection([
+        ('custom', 'Custom Coordinates'),
+        ('builtin', 'Builtin Position')
+    ], string='QR Code Position Type', default='custom', required=True)
+
     ngsign_qr_position_x = fields.Integer(string='TTN QR Position X (mm)', default=10)
     ngsign_qr_position_y = fields.Integer(string='TTN QR Position Y (mm)', default=10)
     ngsign_qr_size = fields.Integer(string='TTN QR Size (mm)', default=30)
