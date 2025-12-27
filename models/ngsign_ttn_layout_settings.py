@@ -44,7 +44,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background.")
     preview_image_name = fields.Char(string="Image Name")
     
-    preview_html = fields.Html(string='Preview', compute='_compute_preview_html')
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
     
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
@@ -69,7 +69,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 file_content = record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image
                 
                 if is_pdf:
-                    background_content = f'<embed src="data:application/pdf;base64,{file_content}" type="application/pdf" width="100%" height="800px" />'
+                    background_content = f'<iframe src="data:application/pdf;base64,{file_content}" width="100%" height="800px" style="border: none;"></iframe>'
                 else:
                     background_content = f'<img src="data:image/png;base64,{file_content}" style="width: 100%; height: auto; display: block;"/>'
             else:
