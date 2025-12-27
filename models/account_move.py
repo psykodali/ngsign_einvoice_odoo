@@ -108,7 +108,6 @@ class AccountMove(models.Model):
         
         return {
             'use_v2': use_v2,
-            'qr_position_type': company.ngsign_qr_position_type,
             'qr_x': company.ngsign_qr_position_x,
             'qr_y': company.ngsign_qr_position_y,
             'qr_size': company.ngsign_qr_size,
