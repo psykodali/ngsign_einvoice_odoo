@@ -7,4 +7,4 @@ from . import ngsign_template_settings
 from . import res_partner
 from . import ngsign_developer_settings
 from . import res_company
-from . import base_document_layout_client
+from . import base_document_layout
