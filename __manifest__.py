@@ -19,7 +19,7 @@
         'views/account_move_views.xml',
         'views/account_tax_views.xml',
         'views/account_payment_term_views.xml',
-        'views/base_document_layout_views.xml',
+        # 'views/base_document_layout_views.xml',  # Disabled: view not found in this Odoo version
         'views/report_invoice.xml',
         # 'data/ngsign_setup.xml',
         'views/res_partner_views.xml',
