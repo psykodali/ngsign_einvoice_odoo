@@ -105,30 +105,17 @@ class AccountMove(models.Model):
         params = self.env['ir.config_parameter'].sudo()
         use_v2 = params.get_param('ngsign.use_v2_endpoint', 'False') == 'True'
         
-        # Use company-specific settings for layout if columns exist (safe upgrade)
-        company = self.company_id or self.env.company
+        # Use company-specific settings for layout
+        # company = self.company_id or self.env.company
         
-        # Check if DB columns exist to avoid UndefinedColumn error before upgrade
-        self.env.cr.execute("SELECT 1 FROM information_schema.columns WHERE table_name='res_company' AND column_name='ngsign_qr_position_x'")
-        has_columns = bool(self.env.cr.fetchone())
-        
-        if has_columns:
-            return {
-                'use_v2': use_v2,
-                'qr_x': company.ngsign_qr_position_x,
-                'qr_y': company.ngsign_qr_position_y,
-                'label_x': company.ngsign_label_position_x,
-                'label_y': company.ngsign_label_position_y,
-            }
-        else:
-            # Fallback for pre-upgrade state
-            return {
-                'use_v2': use_v2,
-                'qr_x': int(params.get_param('ngsign.qr_position_x', 10)),
-                'qr_y': int(params.get_param('ngsign.qr_position_y', 10)),
-                'label_x': int(params.get_param('ngsign.label_position_x', 150)),
-                'label_y': int(params.get_param('ngsign.label_position_y', 10)),
-            }
+        # Reverted to system parameters to fix boot loop
+        return {
+            'use_v2': use_v2,
+            'qr_x': int(params.get_param('ngsign.qr_position_x', 10)),
+            'qr_y': int(params.get_param('ngsign.qr_position_y', 10)),
+            'label_x': int(params.get_param('ngsign.label_position_x', 150)),
+            'label_y': int(params.get_param('ngsign.label_position_y', 10)),
+        }
 
     def _prepare_ngsign_invoice_payload(self, include_pdf=True):
         """
@@ -472,27 +459,10 @@ class AccountMove(models.Model):
         # Fetch configuration from settings
         params = self.env['ir.config_parameter'].sudo()
         
-        # Check if DB columns exist to avoid UndefinedColumn error before upgrade
-        self.env.cr.execute("SELECT 1 FROM information_schema.columns WHERE table_name='res_company' AND column_name='ngsign_qr_position_x'")
-        has_columns = bool(self.env.cr.fetchone())
-
-        config_dict = {}
-        if has_columns:
-             config_dict = {
-                'qrPositionX': self.company_id.ngsign_qr_position_x,
-                'qrPositionY': self.company_id.ngsign_qr_position_y,
-                'qrPositionP': int(params.get_param('ngsign.qr_position_p', 0)),
-                'qrRatio': float(params.get_param('ngsign.qr_ratio', 0.5)),
-                'textPositionX': int(params.get_param('ngsign.text_position_x', 40)),
-                'textPositionY': int(params.get_param('ngsign.text_position_y', 40)),
-                'textPage': int(params.get_param('ngsign.text_page', 0)),
-                'labelPositionX': self.company_id.ngsign_label_position_x,
-                'labelPositionY': self.company_id.ngsign_label_position_y,
-                'labelPositionP': int(params.get_param('ngsign.label_position_p', 0)),
-                'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
-            }
-        else:
-             config_dict = {
+        invoice_upload = {
+            'clientEmail': self.partner_id.email or '',
+            'invoiceTIEF': teif_invoice,
+            'configuration': {
                 'qrPositionX': int(params.get_param('ngsign.qr_position_x', 10)),
                 'qrPositionY': int(params.get_param('ngsign.qr_position_y', 10)),
                 'qrPositionP': int(params.get_param('ngsign.qr_position_p', 0)),
@@ -505,11 +475,6 @@ class AccountMove(models.Model):
                 'labelPositionP': int(params.get_param('ngsign.label_position_p', 0)),
                 'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
             }
-
-        invoice_upload = {
-            'clientEmail': self.partner_id.email or '',
-            'invoiceTIEF': teif_invoice,
-            'configuration': config_dict
         }
         
         if pdf_base64 is not None:
