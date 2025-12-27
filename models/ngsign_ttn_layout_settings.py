@@ -84,6 +84,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             </div>
             '''
     
+    def action_save(self):
+        """Save and close the wizard - related fields auto-save to company"""
+        return {'type': 'ir.actions.act_window_close'}
+    
     def _generate_grid_lines(self, width, height, scale):
         """Generate grid lines every 50mm for reference"""
         lines = []
