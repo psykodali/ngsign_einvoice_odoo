@@ -64,8 +64,14 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             background_content = ''
             
             if record.preview_image:
-                # Use uploaded image
-                background_content = f'<img src="data:image/png;base64,{record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image}" style="width: 100%; height: auto; display: block;"/>'
+                # Use uploaded image or PDF
+                is_pdf = record.preview_image_name and record.preview_image_name.lower().endswith('.pdf')
+                file_content = record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image
+                
+                if is_pdf:
+                    background_content = f'<embed src="data:application/pdf;base64,{file_content}" type="application/pdf" width="100%" height="800px" />'
+                else:
+                    background_content = f'<img src="data:image/png;base64,{file_content}" style="width: 100%; height: auto; display: block;"/>'
             else:
                 # Try to get a recent invoice to use as preview
                 sample_invoice = self.env['account.move'].search([
