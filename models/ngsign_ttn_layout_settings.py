@@ -72,7 +72,19 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 try:
                     # Use a Savepoint to mock data without committing
                     with self.env.cr.savepoint():
-                        # Mock NGSign data on the invoice record
+                        # 1. Force V2 Endpoint (required for report to show overlays)
+                        self.env['ir.config_parameter'].sudo().set_param('ngsign.use_v2_endpoint', 'True')
+                        
+                        # 2. Update Company Settings with current Wizard values so report picks them up
+                        # The report calls o.get_ngsign_print_config() which reads from company
+                        sample_invoice.company_id.write({
+                            'ngsign_qr_position_x': record.ngsign_qr_position_x,
+                            'ngsign_qr_position_y': record.ngsign_qr_position_y,
+                            'ngsign_label_position_x': record.ngsign_label_position_x,
+                            'ngsign_label_position_y': record.ngsign_label_position_y,
+                        })
+                        
+                        # 3. Mock NGSign data on the invoice record
                         dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAJYAAACWAQMAAAAGz+OhAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAJElEQVRIie3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAAAAAAABwJjCgAAEx/46RAAAAAElFTkSuQmCC'
                         
                         sample_invoice.write({
