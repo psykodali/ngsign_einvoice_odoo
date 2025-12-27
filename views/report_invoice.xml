@@ -3,19 +3,19 @@
     <template id="report_invoice_document_inherit_ngsign" inherit_id="account.report_invoice_document">
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
-            <t t-if="ngsign_config['use_v2'] and (o.ngsign_status == 'TTN Signed' or (o.ngsign_ttn_qr_code and o.ngsign_ttn_reference))">
+            <t t-if="o.ngsign_ttn_reference">
                 <t t-if="ngsign_config.get('qr_position_type') == 'builtin'">
                     <!-- Builtin Position (Flow layout) -->
                     <div class="row mt-4 mb-4">
-                         <div class="col-8">
-                            <!-- Left empty to push QR to right or keep it right aligned if desired -->
-                        </div>
                         <div class="col-4 text-center">
                             <img t-if="o.ngsign_ttn_reference" t-att-src="'/report/barcode/?type=QR&amp;value=%s&amp;width=100&amp;height=100' % o.ngsign_ttn_reference" style="width: 30mm; height: 30mm;"/>
                             <div style="font-size: 10pt; margin-top: 5px;">
                                 <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
                                 <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
                             </div>
+                        </div>
+                        <div class="col-8">
+                            <!-- Right side empty -->
                         </div>
                     </div>
                 </t>
