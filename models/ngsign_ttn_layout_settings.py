@@ -32,9 +32,19 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     
+    # Company layout fields
+    company_logo = fields.Binary(related='company_id.logo', string='Company Logo')
+    company_name = fields.Char(related='company_id.name', string='Company Name')
+    primary_color = fields.Char(related='company_id.primary_color', string='Primary Color')
+    secondary_color = fields.Char(related='company_id.secondary_color', string='Secondary Color')
+    font = fields.Selection(related='company_id.font', string='Font')
+    layout_background = fields.Selection(related='company_id.layout_background', string='Layout Background')
+    external_report_layout_id = fields.Many2one(related='company_id.external_report_layout_id', string='Document Layout')
+    
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html')
     
-    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y')
+    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
+                 'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background')
     def _compute_preview_html(self):
         for record in self:
             # A4 dimensions: 210mm x 297mm
@@ -51,25 +61,57 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             # QR code is typically 30mm
             qr_size = 30 * scale
             
+            # Get company colors and styling
+            primary_color = record.primary_color or '#875A7B'
+            secondary_color = record.secondary_color or '#666666'
+            company_name = record.company_name or 'Your Company'
+            
+            # Get company logo as base64
+            logo_html = ''
+            if record.company_logo:
+                logo_html = f'<img src="data:image/png;base64,{record.company_logo.decode("utf-8") if isinstance(record.company_logo, bytes) else record.company_logo}" style="max-height: 60px; max-width: 150px;"/>'
+            else:
+                logo_html = f'<div style="font-size: 24px; font-weight: bold; color: {primary_color};">{company_name}</div>'
+            
+            # Font family based on selection
+            font_family = 'Arial, sans-serif'
+            if record.font:
+                font_map = {
+                    'Lato': 'Lato, sans-serif',
+                    'Roboto': 'Roboto, sans-serif',
+                    'Open_Sans': 'Open Sans, sans-serif',
+                    'Montserrat': 'Montserrat, sans-serif',
+                    'Oswald': 'Oswald, sans-serif',
+                    'Raleway': 'Raleway, sans-serif',
+                }
+                font_family = font_map.get(record.font, font_family)
+            
+            # Background styling based on layout_background
+            page_bg_style = 'background: white;'
+            if record.layout_background == 'Geometric':
+                page_bg_style = f'background: linear-gradient(135deg, {primary_color}15 0%, white 100%);'
+            elif record.layout_background == 'Custom':
+                page_bg_style = f'background: linear-gradient(to bottom, white 0%, {primary_color}08 100%);'
+            
             record.preview_html = f'''
-            <div style="position: relative; width: {page_width}px; height: {page_height}px; border: 1px solid #ddd; background: white; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+            <div style="position: relative; width: {page_width}px; height: {page_height}px; border: 1px solid #ddd; {page_bg_style} margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
                 
                 <!-- Invoice Template Background -->
-                <div style="padding: 40px; font-family: Arial, sans-serif; font-size: 11px; color: #333;">
+                <div style="padding: 40px; font-family: {font_family}; font-size: 11px; color: #333;">
                     
                     <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #875A7B; padding-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid {primary_color}; padding-bottom: 15px;">
                         <div>
-                            <div style="font-size: 24px; font-weight: bold; color: #875A7B;">Your Company</div>
-                            <div style="margin-top: 5px; font-size: 10px; color: #666;">
+                            {logo_html}
+                            <div style="margin-top: 8px; font-size: 10px; color: {secondary_color};">
                                 123 Business Street<br/>
                                 City, Country 12345<br/>
                                 Phone: +1 234 567 890
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 28px; font-weight: bold; color: #875A7B;">INVOICE</div>
-                            <div style="margin-top: 5px; font-size: 10px; color: #666;">
+                            <div style="font-size: 28px; font-weight: bold; color: {primary_color};">INVOICE</div>
+                            <div style="margin-top: 5px; font-size: 10px; color: {secondary_color};">
                                 INV/2025/00001<br/>
                                 Date: 27/12/2025
                             </div>
@@ -78,8 +120,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     
                     <!-- Customer Info -->
                     <div style="margin-bottom: 25px;">
-                        <div style="font-weight: bold; margin-bottom: 8px; color: #875A7B;">Bill To:</div>
-                        <div style="font-size: 10px; color: #666;">
+                        <div style="font-weight: bold; margin-bottom: 8px; color: {primary_color};">Bill To:</div>
+                        <div style="font-size: 10px; color: {secondary_color};">
                             Customer Name<br/>
                             456 Customer Avenue<br/>
                             City, Country 54321
@@ -90,10 +132,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10px;">
                         <thead>
                             <tr style="background: #f5f5f5; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;">
-                                <th style="padding: 8px; text-align: left; color: #875A7B;">Description</th>
-                                <th style="padding: 8px; text-align: right; color: #875A7B;">Quantity</th>
-                                <th style="padding: 8px; text-align: right; color: #875A7B;">Unit Price</th>
-                                <th style="padding: 8px; text-align: right; color: #875A7B;">Amount</th>
+                                <th style="padding: 8px; text-align: left; color: {primary_color};">Description</th>
+                                <th style="padding: 8px; text-align: right; color: {primary_color};">Quantity</th>
+                                <th style="padding: 8px; text-align: right; color: {primary_color};">Unit Price</th>
+                                <th style="padding: 8px; text-align: right; color: {primary_color};">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,7 +165,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                                 <span>Tax (20%):</span>
                                 <span>€35.00</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; font-size: 12px; border-top: 2px solid #875A7B; margin-top: 5px; color: #875A7B;">
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; font-size: 12px; border-top: 2px solid {primary_color}; margin-top: 5px; color: {primary_color};">
                                 <span>Total:</span>
                                 <span>€210.00</span>
                             </div>
@@ -144,7 +186,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 </div>
                 
                 <!-- Label Overlay -->
-                <div style="position: absolute; left: {label_x}px; top: {label_y}px; padding: 8px 12px; border: 3px dashed #875A7B; background: rgba(135,90,123,0.15); font-size: 10px; color: #875A7B; font-weight: bold; white-space: nowrap; z-index: 10;">
+                <div style="position: absolute; left: {label_x}px; top: {label_y}px; padding: 8px 12px; border: 3px dashed {primary_color}; background: rgba(135,90,123,0.15); font-size: 10px; color: {primary_color}; font-weight: bold; white-space: nowrap; z-index: 10;">
                     TTN: ABC123XYZ
                     <div style="font-size: 8px; margin-top: 2px;">({record.ngsign_label_position_x or 150}, {record.ngsign_label_position_y or 10})</div>
                 </div>
