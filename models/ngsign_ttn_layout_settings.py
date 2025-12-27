@@ -41,43 +41,15 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     layout_background = fields.Selection(related='company_id.layout_background', string='Layout Background')
     external_report_layout_id = fields.Many2one(related='company_id.external_report_layout_id', string='Document Layout')
     
+    preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background.")
+    preview_image_name = fields.Char(string="Image Name")
+    
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html')
     
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_label_position_x', 'ngsign_label_position_y', 
-                 'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background')
+                 'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
     def _compute_preview_html(self):
         for record in self:
-            # Try to get a recent invoice to use as preview
-            sample_invoice = self.env['account.move'].search([
-                ('move_type', '=', 'out_invoice'),
-                ('state', '=', 'posted'),
-                ('company_id', '=', record.company_id.id)
-            ], limit=1, order='id desc')
-            
-            if not sample_invoice:
-                # If no invoice exists, show a message
-                record.preview_html = '''
-                    <div style="padding: 50px; text-align: center; color: #666;">
-                        <h3>No Invoice Available for Preview</h3>
-                        <p>Please create and post at least one invoice to see the preview.</p>
-                        <p>The QR code and label will be positioned according to your settings.</p>
-                    </div>
-                '''
-                continue
-            
-            # Get the invoice report
-            report = self.env.ref('account.account_invoices')
-            
-            # Render the invoice HTML
-            try:
-                html_content = report._render_qweb_html(report, sample_invoice.ids)[0]
-                html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
-            except Exception as e:
-                import logging
-                _logger = logging.getLogger(__name__)
-                _logger.error(f"Error rendering invoice preview: {str(e)}")
-                html_str = f'<div style="padding: 50px; text-align: center; color: #666;"><h3>Unable to render invoice preview</h3><p style="color: #999; font-size: 12px;">Error: {str(e)}</p></div>'
-            
             # Scale and positioning for overlay
             scale = 2.5  # 1mm = 2.5px
             qr_x = (record.ngsign_qr_position_x or 10) * scale
@@ -89,13 +61,49 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             # Get primary color for overlay
             primary_color = record.primary_color or '#875A7B'
             
-            # Wrap the rendered invoice in a container with overlays
+            background_content = ''
+            
+            if record.preview_image:
+                # Use uploaded image
+                background_content = f'<img src="data:image/png;base64,{record.preview_image.decode("utf-8") if isinstance(record.preview_image, bytes) else record.preview_image}" style="width: 100%; height: auto; display: block;"/>'
+            else:
+                # Try to get a recent invoice to use as preview
+                sample_invoice = self.env['account.move'].search([
+                    ('move_type', '=', 'out_invoice'),
+                    ('state', '=', 'posted'),
+                    ('company_id', '=', record.company_id.id)
+                ], limit=1, order='id desc')
+                
+                if sample_invoice:
+                    # Get the invoice report
+                    report = self.env.ref('account.account_invoices')
+                    
+                    # Render the invoice HTML
+                    try:
+                        html_content = report._render_qweb_html(report, sample_invoice.ids)[0]
+                        html_str = html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
+                        background_content = html_str
+                    except Exception as e:
+                        import logging
+                        _logger = logging.getLogger(__name__)
+                        _logger.error(f"Error rendering invoice preview: {str(e)}")
+                        background_content = f'<div style="padding: 50px; text-align: center; color: #666;"><h3>Unable to render invoice preview</h3><p style="color: #999; font-size: 12px;">Error: {str(e)}</p></div>'
+                else:
+                    background_content = '''
+                        <div style="padding: 50px; text-align: center; color: #666;">
+                            <h3>No Invoice Available for Preview</h3>
+                            <p>Please create and post at least one invoice to see the preview.</p>
+                            <p>OR upload a custom image of your invoice above.</p>
+                        </div>
+                    '''
+            
+            # Wrap in container with overlays
             record.preview_html = f'''
             <div style="position: relative; margin: 0 auto; max-width: 900px;">
-                <!-- Rendered Invoice -->
+                <!-- Background (Image or Rendered HTML) -->
                 <div style="position: relative; transform: scale(0.8); transform-origin: top left; width: 125%;">
-                    <div style="position: relative; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                        {html_str}
+                    <div style="position: relative; border: 1px solid #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-height: 800px;">
+                        {background_content}
                         
                         <!-- QR Code Overlay -->
                         <div style="position: absolute; left: {qr_x}px; top: {qr_y}px; width: {qr_size}px; height: {qr_size}px; border: 3px dashed #00a09d; background: rgba(0,160,157,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #00a09d; font-weight: bold; z-index: 1000; pointer-events: none;">
@@ -114,7 +122,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 
                 <!-- Info bar -->
                 <div style="margin-top: 20px; text-align: center; background: rgba(255,255,255,0.95); padding: 12px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 11px; color: #666;">
-                    <strong>Preview:</strong> Invoice #{sample_invoice.name} - Positions shown in millimeters from top-left corner
+                    <strong>Preview:</strong> Positions shown in millimeters from top-left corner
                 </div>
             </div>
             '''
