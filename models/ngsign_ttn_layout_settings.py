@@ -84,10 +84,39 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background. PDF files are NOT supported.")
     preview_image_name = fields.Char(string="Image Name")
     
-    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super(NGSignTTNLayoutSettings, self).default_get(fields_list)
+        company = self.env.company
+        
+        if 'company_id' in fields_list:
+            defaults['company_id'] = company.id
+            
+        # Manually load values because TransientModel doesn't always autopopulate related fields on create
+        if 'ngsign_qr_position_type' in fields_list:
+            defaults['ngsign_qr_position_type'] = company.ngsign_qr_position_type
+        if 'ngsign_qr_position_x' in fields_list:
+            defaults['ngsign_qr_position_x'] = company.ngsign_qr_position_x
+        if 'ngsign_qr_position_y' in fields_list:
+            defaults['ngsign_qr_position_y'] = company.ngsign_qr_position_y
+        if 'ngsign_qr_size' in fields_list:
+            defaults['ngsign_qr_size'] = company.ngsign_qr_size
+            
+        if 'ngsign_label_position_x' in fields_list:
+            defaults['ngsign_label_position_x'] = company.ngsign_label_position_x
+        if 'ngsign_label_position_y' in fields_list:
+            defaults['ngsign_label_position_y'] = company.ngsign_label_position_y
+        if 'ngsign_label_width' in fields_list:
+            defaults['ngsign_label_width'] = company.ngsign_label_width
+        if 'ngsign_label_text' in fields_list:
+            defaults['ngsign_label_text'] = company.ngsign_label_text
+        if 'ngsign_label_font_size' in fields_list:
+            defaults['ngsign_label_font_size'] = company.ngsign_label_font_size
+            
+        return defaults
     
 
-
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
                  'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size',
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
