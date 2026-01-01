@@ -100,7 +100,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         return defaults
     
 
-    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', store=True, sanitize=False)
     @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
                  'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size',
                  'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
@@ -130,6 +130,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 old_v2_param = config.get_param('ngsign.use_v2_endpoint')
                 
                 old_company_vals = {
+                    'ngsign_qr_position_type': company.ngsign_qr_position_type, # Also save type
                     'ngsign_qr_position_x': company.ngsign_qr_position_x,
                     'ngsign_qr_position_y': company.ngsign_qr_position_y,
                     'ngsign_qr_size': company.ngsign_qr_size,
@@ -151,7 +152,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     config.set_param('ngsign.use_v2_endpoint', 'True')
                     
                     # 2. Update Company Settings with current Wizard values so report picks them up
-                    company.write({
+                    company.sudo().write({
                         'ngsign_qr_position_type': record.ngsign_qr_position_type,
                         'ngsign_qr_position_x': record.ngsign_qr_position_x,
                         'ngsign_qr_position_y': record.ngsign_qr_position_y,
@@ -167,7 +168,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
                     dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
                     
-                    sample_invoice.write({
+                    sample_invoice.sudo().write({
                         'ngsign_status': 'TTN Signed',
                         'ngsign_ttn_reference': 'ABC123XYZ-PREVIEW',
                         'ngsign_ttn_qr_code': dummy_qr
@@ -175,7 +176,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     
                     # Render the PDF
                     report_action = self.env.ref('account.account_invoices')
-                    pdf_content, _ = report_action.with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
+                    # Use sudo to ensure we can render report even if access rights are tricky during wizard
+                    pdf_content, _ = report_action.sudo().with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
                     
                     # Capture result
                     pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
@@ -187,9 +189,9 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     # Revert changes manually to avoid transaction rollback side effects on cache
                     try:
                         config.set_param('ngsign.use_v2_endpoint', old_v2_param)
-                        company.write(old_company_vals)
+                        company.sudo().write(old_company_vals)
                         # Only write back what is necessary and safe
-                        sample_invoice.write(old_invoice_vals)
+                        sample_invoice.sudo().write(old_invoice_vals)
                     except Exception as revert_e:
                         _logger.error(f"Failed to revert preview changes: {revert_e}")
                 
@@ -226,10 +228,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         
     def action_apply(self):
         """Update the preview with current form values without saving to company"""
-        # Force recompute of preview
-        self._compute_preview_html()
-        
-        # Return a reload action to refresh the view with the new preview
+        # Since fields are stored, saving the record (automatic) triggers compute of preview_html.
+        # We just need to reload.
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',
