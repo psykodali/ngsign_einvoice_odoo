@@ -117,6 +117,7 @@ class AccountMove(models.Model):
             'label_width': company.ngsign_label_width,
             'label_text': company.ngsign_label_text,
             'label_font_size': company.ngsign_label_font_size,
+            'show_debug_info': self.env['ir.config_parameter'].sudo().get_param('ngsign.show_report_debug_info', 'False') == 'True',
         }
     
     def get_ttn_qr_code_base64(self):

@@ -10,6 +10,7 @@
                     <field name="show_transaction_uuid"/>
                     <field name="show_invoice_uuid"/>
                     <field name="generate_pdf_debug"/>
+                    <field name="show_report_debug_info"/>
                 </group>
                 <footer>
                     <button string="Save" type="object" name="action_save" class="btn-primary"/>
