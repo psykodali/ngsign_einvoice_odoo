@@ -12,60 +12,44 @@ class NGSignTTNLayoutSettings(models.TransientModel):
 
     # Company-specific related fields
     # Company-specific related fields
-    ngsign_qr_position_type = fields.Selection(
-        related='company_id.ngsign_qr_position_type',
-        readonly=False,
-        string='Position Type'
-    )
+    ngsign_qr_position_type = fields.Selection([
+        ('custom', 'Custom Coordinates'),
+        ('builtin', 'Builtin Position')
+    ], string='Position Type', default='custom')
+
     ngsign_qr_position_x = fields.Integer(
-        related='company_id.ngsign_qr_position_x', 
-        readonly=False, 
         string='QR Position X (mm)',
         help='Horizontal position of the QR code from the left edge'
     )
     ngsign_qr_position_y = fields.Integer(
-        related='company_id.ngsign_qr_position_y', 
-        readonly=False, 
         string='QR Position Y (mm)',
         help='Vertical position of the QR code from the top edge'
     )
     ngsign_label_position_x = fields.Integer(
-        related='company_id.ngsign_label_position_x', 
-        readonly=False, 
         string='Label Position X (mm)',
         help='Horizontal position of the TTN reference label from the left edge'
     )
     ngsign_label_position_y = fields.Integer(
-        related='company_id.ngsign_label_position_y', 
-        readonly=False, 
         string='Label Position Y (mm)',
         help='Vertical position of the TTN reference label from the top edge'
     )
     
     ngsign_qr_size = fields.Integer(
-        related='company_id.ngsign_qr_size',
-        readonly=False,
         string='QR Code Size (mm)',
         default=30
     )
     
     ngsign_label_width = fields.Integer(
-        related='company_id.ngsign_label_width',
-        readonly=False,
         string='Label Width (mm)',
         default=50
     )
     
     ngsign_label_text = fields.Char(
-        related='company_id.ngsign_label_text',
-        readonly=False,
         string='Label Prefix Text',
         default=''
     )
     
     ngsign_label_font_size = fields.Integer(
-        related='company_id.ngsign_label_font_size',
-        readonly=False,
         string='Label Font Size (pt)',
         default=10
     )
@@ -239,3 +223,26 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             'ngsign_label_font_size': self.ngsign_label_font_size,
         })
         return {'type': 'ir.actions.act_window_close'}
+        
+    def action_apply(self):
+        """Save fields to company and refresh the view to update preview"""
+        company = self.env.company
+        company.sudo().write({
+            'ngsign_qr_position_type': self.ngsign_qr_position_type,
+            'ngsign_qr_position_x': self.ngsign_qr_position_x,
+            'ngsign_qr_position_y': self.ngsign_qr_position_y,
+            'ngsign_qr_size': self.ngsign_qr_size,
+            'ngsign_label_position_x': self.ngsign_label_position_x,
+            'ngsign_label_position_y': self.ngsign_label_position_y,
+            'ngsign_label_width': self.ngsign_label_width,
+            'ngsign_label_text': self.ngsign_label_text,
+            'ngsign_label_font_size': self.ngsign_label_font_size,
+        })
+        # Force recompute of preview
+        self._compute_preview_html()
+        
+        # Return a reload action to refresh the view with new values (and new preview)
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
