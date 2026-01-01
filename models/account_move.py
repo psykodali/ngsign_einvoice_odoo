@@ -120,8 +120,28 @@ class AccountMove(models.Model):
         }
     
     def get_ttn_qr_code_base64(self):
-        """Generate QR code for TTN reference on-the-fly"""
+        """
+        Returns the TTN QR code.
+        Priority:
+        1. The QR code image returned by the API (stored in ngsign_ttn_qr_code).
+        2. Fallback: Generate one on-the-fly using the reference (only if API image is missing).
+        """
         self.ensure_one()
+        
+        # 1. Try to use the API provided QR code (stored as binary)
+        if self.ngsign_ttn_qr_code:
+            try:
+                # ngsign_ttn_qr_code is a binary field, so it's already base64 encoded bytes in Odoo generally,
+                # but sometimes it reads as bytes. We need to ensure we return a string for the report.
+                if isinstance(self.ngsign_ttn_qr_code, bytes):
+                    return self.ngsign_ttn_qr_code.decode('utf-8')
+                return self.ngsign_ttn_qr_code
+            except Exception as e:
+                import logging
+                _logger = logging.getLogger(__name__)
+                _logger.warning(f"Failed to decode stored QR code: {e}")
+        
+        # 2. Fallback: Generate on-the-fly
         if not self.ngsign_ttn_reference:
             return False
         
