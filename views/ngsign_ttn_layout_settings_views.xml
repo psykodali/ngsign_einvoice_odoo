@@ -67,7 +67,7 @@
                     </div>
                 </group>
                 <footer>
-                    <button string="Apply" type="object" name="action_apply" class="btn-secondary"/>
+                    <button string="Update Preview" type="object" name="action_apply" class="btn-secondary"/>
                     <button string="Save" type="object" name="action_save" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>

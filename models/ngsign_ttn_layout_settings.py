@@ -225,23 +225,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         return {'type': 'ir.actions.act_window_close'}
         
     def action_apply(self):
-        """Save fields to company and refresh the view to update preview"""
-        company = self.env.company
-        company.sudo().write({
-            'ngsign_qr_position_type': self.ngsign_qr_position_type,
-            'ngsign_qr_position_x': self.ngsign_qr_position_x,
-            'ngsign_qr_position_y': self.ngsign_qr_position_y,
-            'ngsign_qr_size': self.ngsign_qr_size,
-            'ngsign_label_position_x': self.ngsign_label_position_x,
-            'ngsign_label_position_y': self.ngsign_label_position_y,
-            'ngsign_label_width': self.ngsign_label_width,
-            'ngsign_label_text': self.ngsign_label_text,
-            'ngsign_label_font_size': self.ngsign_label_font_size,
-        })
+        """Update the preview with current form values without saving to company"""
         # Force recompute of preview
         self._compute_preview_html()
         
-        # Return a reload action to refresh the view with new values (and new preview)
+        # Return a reload action to refresh the view with the new preview
         return {
             'type': 'ir.actions.client',
             'tag': 'reload',
