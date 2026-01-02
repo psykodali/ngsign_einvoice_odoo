@@ -234,3 +234,22 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             'type': 'ir.actions.client',
             'tag': 'reload',
         }
+
+    def action_reset(self):
+        """Reset form values to stored company settings"""
+        company = self.env.company
+        self.write({
+            'ngsign_qr_position_type': company.ngsign_qr_position_type,
+            'ngsign_qr_position_x': company.ngsign_qr_position_x,
+            'ngsign_qr_position_y': company.ngsign_qr_position_y,
+            'ngsign_qr_size': company.ngsign_qr_size,
+            'ngsign_label_position_x': company.ngsign_label_position_x,
+            'ngsign_label_position_y': company.ngsign_label_position_y,
+            'ngsign_label_width': company.ngsign_label_width,
+            'ngsign_label_text': company.ngsign_label_text,
+            'ngsign_label_font_size': company.ngsign_label_font_size,
+        })
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }

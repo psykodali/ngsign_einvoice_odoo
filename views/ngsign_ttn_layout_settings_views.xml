@@ -68,6 +68,7 @@
                 </group>
                 <footer>
                     <button string="Update Preview" type="object" name="action_apply" class="btn-secondary"/>
+                    <button string="Reset" type="object" name="action_reset" class="btn-secondary"/>
                     <button string="Save" type="object" name="action_save" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
