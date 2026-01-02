@@ -130,15 +130,14 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 }
                 
                 try:
-                    # Prepare preview config dictionary to inject via context
-                    # This avoids writing to company settings in DB
                     preview_config = {
                         'qr_position_type': record.ngsign_qr_position_type,
-                        'qr_position_x': record.ngsign_qr_position_x,
-                        'qr_position_y': record.ngsign_qr_position_y,
+                        # Map wizard fields to keys used in report_invoice.xml (which expects 'qr_x', 'qr_y', etc.)
+                        'qr_x': record.ngsign_qr_position_x,
+                        'qr_y': record.ngsign_qr_position_y,
                         'qr_size': record.ngsign_qr_size,
-                        'label_position_x': record.ngsign_label_position_x,
-                        'label_position_y': record.ngsign_label_position_y,
+                        'label_x': record.ngsign_label_position_x,
+                        'label_y': record.ngsign_label_position_y,
                         'label_width': record.ngsign_label_width,
                         'label_text': record.ngsign_label_text,
                         'label_font_size': record.ngsign_label_font_size,
