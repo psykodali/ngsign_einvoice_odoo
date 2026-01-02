@@ -256,9 +256,14 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         # Increment the trigger to force preview recomputation  
         self.write({'preview_trigger': self.preview_trigger + 1})
         
-        # Don't return any action - let Odoo auto-refresh the form
-        # This prevents the double-load issue
-        pass
+        # Return the same window to refresh it
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
     def action_reset(self):
         """Reset form values to stored company settings"""
