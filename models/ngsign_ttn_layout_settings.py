@@ -100,9 +100,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         return defaults
     
 
-    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', store=True, sanitize=False)
-    @api.depends('ngsign_qr_position_type', 'ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
-                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size')
+    # Trigger field to force preview recomputation
+    preview_trigger = fields.Integer(default=0)
+    
+    preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
+    @api.depends('preview_trigger')
     def _compute_preview_html(self):
         for record in self:
             _logger.info(f"=== _compute_preview_html called for record {record.id} ===")
@@ -217,9 +219,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         
     def action_apply(self):
         """Update the preview with current form values without saving to company"""
-        # The record has been saved by Odoo before this method is called
-        # The compute has already run and updated preview_html in the database
-        # Just return an action to refresh the view
+        # Increment the trigger to force preview recomputation
+        self.write({'preview_trigger': self.preview_trigger + 1})
+        
+        # Return action to keep the wizard open
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'ngsign.ttn.layout.settings',
