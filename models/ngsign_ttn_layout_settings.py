@@ -123,24 +123,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 pdf_base64_result = None
                 error_message = None
                 
-                # Store original values to revert later
-                company = sample_invoice.company_id
-                config = self.env['ir.config_parameter'].sudo()
-                
-                old_v2_param = config.get_param('ngsign.use_v2_endpoint')
-                
-                old_company_vals = {
-                    'ngsign_qr_position_type': company.ngsign_qr_position_type, # Also save type
-                    'ngsign_qr_position_x': company.ngsign_qr_position_x,
-                    'ngsign_qr_position_y': company.ngsign_qr_position_y,
-                    'ngsign_qr_size': company.ngsign_qr_size,
-                    'ngsign_label_position_x': company.ngsign_label_position_x,
-                    'ngsign_label_position_y': company.ngsign_label_position_y,
-                    'ngsign_label_width': company.ngsign_label_width,
-                    'ngsign_label_text': company.ngsign_label_text,
-                    'ngsign_label_font_size': company.ngsign_label_font_size,
-                }
-                
                 old_invoice_vals = {
                     'ngsign_status': sample_invoice.ngsign_status,
                     'ngsign_ttn_reference': sample_invoice.ngsign_ttn_reference,
@@ -148,23 +130,23 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 }
                 
                 try:
-                    # 1. Force V2 Endpoint (required for report to show overlays)
-                    config.set_param('ngsign.use_v2_endpoint', 'True')
-                    
-                    # 2. Update Company Settings with current Wizard values so report picks them up
-                    company.sudo().write({
-                        'ngsign_qr_position_type': record.ngsign_qr_position_type,
-                        'ngsign_qr_position_x': record.ngsign_qr_position_x,
-                        'ngsign_qr_position_y': record.ngsign_qr_position_y,
-                        'ngsign_qr_size': record.ngsign_qr_size,
-                        'ngsign_label_position_x': record.ngsign_label_position_x,
-                        'ngsign_label_position_y': record.ngsign_label_position_y,
-                        'ngsign_label_width': record.ngsign_label_width,
-                        'ngsign_label_text': record.ngsign_label_text,
-                        'ngsign_label_font_size': record.ngsign_label_font_size,
-                    })
-                    
-                    # 3. Mock NGSign data on the invoice record
+                    # Prepare preview config dictionary to inject via context
+                    # This avoids writing to company settings in DB
+                    preview_config = {
+                        'qr_position_type': record.ngsign_qr_position_type,
+                        'qr_position_x': record.ngsign_qr_position_x,
+                        'qr_position_y': record.ngsign_qr_position_y,
+                        'qr_size': record.ngsign_qr_size,
+                        'label_position_x': record.ngsign_label_position_x,
+                        'label_position_y': record.ngsign_label_position_y,
+                        'label_width': record.ngsign_label_width,
+                        'label_text': record.ngsign_label_text,
+                        'label_font_size': record.ngsign_label_font_size,
+                        'use_v2_endpoint': True, # Force V2 for overlays
+                        'show_debug_info': self.env['ir.config_parameter'].sudo().get_param('ngsign.show_report_debug_info', 'False') == 'True'
+                    }
+
+                    # Mock NGSign data on the invoice record
                     # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
                     dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
                     
@@ -174,10 +156,16 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         'ngsign_ttn_qr_code': dummy_qr
                     })
                     
-                    # Render the PDF
+                    # Render the PDF with injected configuration
                     report_action = self.env.ref('account.account_invoices')
-                    # Use sudo to ensure we can render report even if access rights are tricky during wizard
-                    pdf_content, _ = report_action.sudo().with_context(force_report_rendering=True)._render_qweb_pdf(report_action, sample_invoice.ids)
+                    
+                    ctx = dict(self.env.context)
+                    ctx.update({
+                        'force_report_rendering': True,
+                        'ngsign_preview_config': preview_config
+                    })
+                    
+                    pdf_content, _ = report_action.sudo().with_context(ctx)._render_qweb_pdf(report_action, sample_invoice.ids)
                     
                     # Capture result
                     pdf_base64_result = base64.b64encode(pdf_content).decode('utf-8')
@@ -186,14 +174,11 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                      _logger.error(f"Error rendering PDF preview: {str(e)}")
                      error_message = str(e)
                 finally:
-                    # Revert changes manually to avoid transaction rollback side effects on cache
+                    # Revert mock invoice data
                     try:
-                        config.set_param('ngsign.use_v2_endpoint', old_v2_param)
-                        company.sudo().write(old_company_vals)
-                        # Only write back what is necessary and safe
                         sample_invoice.sudo().write(old_invoice_vals)
                     except Exception as revert_e:
-                        _logger.error(f"Failed to revert preview changes: {revert_e}")
+                        _logger.error(f"Failed to revert invoice preview changes: {revert_e}")
                 
                 # Assign field value
                 if pdf_base64_result:

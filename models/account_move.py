@@ -98,11 +98,15 @@ class AccountMove(models.Model):
         return NGSignClient(api_url, token)
 
     def get_ngsign_print_config(self):
-        """
-        Returns configuration for the QR code and label positioning in the print view.
-        This is called from the QWeb report template.
-        """
+        """Get print configuration for NGSign overlay"""
         self.ensure_one()
+        config = self.env['ir.config_parameter'].sudo()
+        
+        # Allow context override for preview wizard
+        preview_config = self.env.context.get('ngsign_preview_config')
+        if preview_config:
+             return preview_config
+
         company = self.company_id
         use_v2 = self.env['ir.config_parameter'].sudo().get_param('ngsign.use_v2_endpoint', 'False') == 'True'
         
