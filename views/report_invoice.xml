@@ -1,48 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_inherit_ngsign" inherit_id="account.report_invoice_document">
+        <!-- Builtin position: inside page for flow layout -->
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
-            <t t-if="o.ngsign_ttn_reference">
+            <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') == 'builtin'">
+                <t t-set="qr_code_b64" t-value="o.get_ttn_qr_code_base64()"/>
+                <t t-if="qr_code_b64">
+                    <!-- Builtin Position (Flow layout) -->
+                    <div class="row mt-4 mb-4">
+                        <div class="col-4 text-center">
+                            <div t-attf-style="width: 30mm; height: 30mm; margin: 0 auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                                <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
+                            </div>
+                            <div style="font-size: 10pt; margin-top: 5px;">
+                                <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
+                                <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
+                            </div>
+                        </div>
+                        <div class="col-8">
+                            <!-- Right side empty -->
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </xpath>
+        
+        <!-- Custom position: before page div for absolute positioning over entire page -->
+        <xpath expr="//div[hasclass('page')]" position="before">
+            <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
+            <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') != 'builtin'">
                 <!-- Debug: TTN Reference exists -->
-                <div t-if="ngsign_config.get('show_debug_info')" style="background: yellow; padding: 10px; margin: 10px;">
+                <div t-if="ngsign_config.get('show_debug_info')" style="background: yellow; padding: 10px; margin: 10px; position: relative; z-index: 10000;">
                     DEBUG: TTN Reference = <t t-esc="o.ngsign_ttn_reference"/>
                     <br/>Position Type = <t t-esc="ngsign_config.get('qr_position_type', 'NOT SET')"/>
                     <br/>QR Data Exists = <t t-esc="bool(o.get_ttn_qr_code_base64())"/>
                 </div>
                 
                 <t t-set="qr_code_b64" t-value="o.get_ttn_qr_code_base64()"/>
-                
                 <t t-if="qr_code_b64">
-                    <t t-if="ngsign_config.get('qr_position_type') == 'builtin'">
-                        <!-- Builtin Position (Flow layout) -->
-                        <div class="row mt-4 mb-4">
-                            <div class="col-4 text-center">
-                                <div t-attf-style="width: 30mm; height: 30mm; margin: 0 auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
-                                    <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
-                                </div>
-                                <div style="font-size: 10pt; margin-top: 5px;">
-                                    <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
-                                    <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
-                                </div>
-                            </div>
-                            <div class="col-8">
-                                <!-- Right side empty -->
-                            </div>
-                        </div>
-                    </t>
-                    <t t-else="">
-                        <!-- QR Code (Fixed position relative to page) - DEFAULT -->
-                        <!-- Note: Subtract 15mm from Y to compensate for page top margin -->
-                        <div t-attf-style="position: fixed; top: calc({{ngsign_config['qr_y']}}mm - 15mm); left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
-                            <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
-                        </div>
-                        <!-- TTN Reference (Fixed position) -->
-                        <div t-attf-style="position: fixed; top: calc({{ngsign_config['label_y']}}mm - 15mm); left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
-                            <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
-                            <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
-                        </div>
-                    </t>
+                    <!-- QR Code (Absolute position - can overlay anywhere on page) -->
+                    <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                        <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
+                    </div>
+                    <!-- TTN Reference (Absolute position) -->
+                    <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
+                        <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
+                        <span t-esc="o.ngsign_ttn_reference" style="font-weight: bold;"/>
+                    </div>
                 </t>
             </t>
         </xpath>
