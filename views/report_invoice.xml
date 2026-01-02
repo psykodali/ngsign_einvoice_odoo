@@ -33,11 +33,12 @@
                     </t>
                     <t t-else="">
                         <!-- QR Code (Fixed position relative to page) - DEFAULT -->
-                        <div t-attf-style="position: fixed; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                        <!-- Note: Subtract 15mm from Y to compensate for page top margin -->
+                        <div t-attf-style="position: fixed; top: calc({{ngsign_config['qr_y']}}mm - 15mm); left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
                             <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
                         </div>
                         <!-- TTN Reference (Fixed position) -->
-                        <div t-attf-style="position: fixed; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
+                        <div t-attf-style="position: fixed; top: calc({{ngsign_config['label_y']}}mm - 15mm); left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
                             <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
                             <span t-field="o.ngsign_ttn_reference" style="font-weight: bold;"/>
                         </div>
