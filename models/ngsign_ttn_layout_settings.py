@@ -105,6 +105,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                  'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size')
     def _compute_preview_html(self):
         for record in self:
+            _logger.info(f"=== _compute_preview_html called for record {record.id} ===")
+            _logger.info(f"QR Position: x={record.ngsign_qr_position_x}, y={record.ngsign_qr_position_y}")
+            _logger.info(f"Label Position: x={record.ngsign_label_position_x}, y={record.ngsign_label_position_y}")
+            
             # Try to get a recent invoice to use as preview (Posted first, then Draft)
             domain = [
                 ('move_type', '=', 'out_invoice'),
@@ -143,6 +147,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         'use_v2_endpoint': True, # Force V2 for overlays
                         'show_debug_info': self.env['ir.config_parameter'].sudo().get_param('ngsign.show_report_debug_info', 'False') == 'True'
                     }
+                    
+                    _logger.info(f"Preview config: {preview_config}")
 
                     # Mock NGSign data on the invoice record
                     # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
@@ -211,21 +217,15 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         
     def action_apply(self):
         """Update the preview with current form values without saving to company"""
-        # The record is already saved by Odoo before this method is called
-        # The compute method has already run and updated preview_html
-        # We just need to tell the client to refresh the form view
-        
-        # Force a recompute to ensure preview_html is up to date
-        self._compute_preview_html()
-        
-        # Return an action that refreshes the current view without closing
+        # The record has been saved by Odoo before this method is called
+        # The compute has already run and updated preview_html in the database
+        # Just return an action to refresh the view
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'ngsign.ttn.layout.settings',
             'res_id': self.id,
             'view_mode': 'form',
             'target': 'new',
-            'context': self.env.context,
         }
 
     def action_reset(self):
