@@ -229,8 +229,16 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     def action_apply(self):
         """Update the preview with current form values without saving to company"""
         # Since fields are stored, saving the record (automatic) triggers compute of preview_html.
-        # We just need to reload.
-        return True
+        
+        # Re-open the same wizard to keep it open and show updated fields
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'TTN Layout Configuration',
+            'res_model': 'ngsign.ttn.layout.settings',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
     def action_reset(self):
         """Reset form values to stored company settings"""
