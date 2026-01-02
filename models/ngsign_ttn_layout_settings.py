@@ -102,11 +102,19 @@ class NGSignTTNLayoutSettings(models.TransientModel):
 
     # Trigger field to force preview recomputation
     preview_trigger = fields.Integer(default=0)
+    last_preview_trigger = fields.Integer(default=0)  # Track last computed trigger
+    cached_preview_html = fields.Html()  # Cache the last preview
     
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
     @api.depends('preview_trigger')
     def _compute_preview_html(self):
         for record in self:
+            # If we've already computed for this trigger value, use cached version
+            if record.preview_trigger == record.last_preview_trigger and record.cached_preview_html:
+                _logger.info(f"Using cached preview for trigger {record.preview_trigger}")
+                record.preview_html = record.cached_preview_html
+                continue
+                
             _logger.info(f"=== _compute_preview_html called for record {record.id} ===")
             _logger.info(f"QR Position: x={record.ngsign_qr_position_x}, y={record.ngsign_qr_position_y}")
             _logger.info(f"Label Position: x={record.ngsign_label_position_x}, y={record.ngsign_label_position_y}")
@@ -153,8 +161,25 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     _logger.info(f"Preview config: {preview_config}")
 
                     # Mock NGSign data on the invoice record
-                    # Better Dummy QR (1x1 Black Pixel, scaled by style) to ensure visibility and valid data
-                    dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+                    # Generate a proper QR code for the preview text
+                    try:
+                        import qrcode
+                        import io
+                        
+                        qr = qrcode.QRCode(version=1, box_size=10, border=4)
+                        qr.add_data('ABC123XYZ-PREVIEW')
+                        qr.make(fit=True)
+                        
+                        img = qr.make_image(fill_color="black", back_color="white")
+                        buffer = io.BytesIO()
+                        img.save(buffer, format='PNG')
+                        buffer.seek(0)
+                        
+                        dummy_qr = base64.b64encode(buffer.getvalue())
+                    except Exception as qr_error:
+                        _logger.warning(f"Could not generate QR code for preview: {qr_error}")
+                        # Fallback to 1x1 pixel
+                        dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
                     
                     sample_invoice.sudo().write({
                         'ngsign_status': 'TTN Signed',
@@ -200,6 +225,12 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                         <p>Please create and save at least one invoice (even as draft) to see the preview.</p>
                     </div>
                 '''
+            
+            # Cache the preview and update trigger
+            record.write({
+                'cached_preview_html': record.preview_html,
+                'last_preview_trigger': record.preview_trigger
+            })
 
     def action_save(self):
         """Save and close the wizard - save fields to company"""
