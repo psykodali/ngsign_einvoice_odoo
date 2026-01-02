@@ -222,11 +222,9 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         # Increment the trigger to force preview recomputation
         self.write({'preview_trigger': self.preview_trigger + 1})
         
-        # Use reload to refresh the view without recreating it
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
-        }
+        # Return False to keep the dialog open without any action
+        # This prevents the page reload while still triggering the compute
+        return False
 
     def action_reset(self):
         """Reset form values to stored company settings"""
