@@ -40,11 +40,12 @@
                 <t t-set="qr_code_b64" t-value="o.get_ttn_qr_code_base64()"/>
                 <t t-if="qr_code_b64">
                     <!-- QR Code (Absolute position - can overlay anywhere on page) -->
-                    <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                    <!-- Subtract ~40mm to compensate for page top margin/padding -->
+                    <div t-attf-style="position: absolute; top: calc({{ngsign_config['qr_y']}}mm - 40mm); left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
                         <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
                     </div>
                     <!-- TTN Reference (Absolute position) -->
-                    <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
+                    <div t-attf-style="position: absolute; top: calc({{ngsign_config['label_y']}}mm - 40mm); left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; font-size: {{ngsign_config['label_font_size']}}pt;">
                         <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
                         <span t-esc="o.ngsign_ttn_reference" style="font-weight: bold;"/>
                     </div>
