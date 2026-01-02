@@ -57,11 +57,12 @@
                         </div>
                         
                         <!-- QR Code (Absolute position from page origin) -->
-                        <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; pointer-events: auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                        <!-- Using configurable PDF margin offset to compensate for wkhtmltopdf margins -->
+                        <div t-attf-style="position: absolute; top: calc({{ngsign_config['qr_y']}}mm - {{ngsign_config.get('pdf_margin_offset', 40)}}mm); left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; pointer-events: auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
                             <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
                         </div>
                         <!-- TTN Reference (Absolute position) -->
-                        <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; pointer-events: auto; font-size: {{ngsign_config['label_font_size']}}pt;">
+                        <div t-attf-style="position: absolute; top: calc({{ngsign_config['label_y']}}mm - {{ngsign_config.get('pdf_margin_offset', 40)}}mm); left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; pointer-events: auto; font-size: {{ngsign_config['label_font_size']}}pt;">
                             <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
                             <span t-esc="o.ngsign_ttn_reference" style="font-weight: bold;"/>
                         </div>

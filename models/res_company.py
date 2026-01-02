@@ -27,6 +27,13 @@ class ResCompany(models.Model):
     ngsign_qr_position_y = fields.Integer(string='TTN QR Position Y (mm)', default=10)
     ngsign_qr_size = fields.Integer(string='TTN QR Size (mm)', default=30)
     
+    # PDF margin offset to compensate for wkhtmltopdf margins
+    ngsign_pdf_margin_offset = fields.Integer(
+        string='PDF Top Margin Offset (mm)', 
+        default=40,
+        help='Offset to compensate for PDF page margins. Increase if QR appears too low, decrease if too high.'
+    )
+    
     ngsign_label_position_x = fields.Integer(string='TTN Label Position X (mm)', default=150)
     ngsign_label_position_y = fields.Integer(string='TTN Label Position Y (mm)', default=10)
     ngsign_label_width = fields.Integer(string='TTN Label Width (mm)', default=50)

@@ -116,6 +116,7 @@ class AccountMove(models.Model):
             'qr_x': company.ngsign_qr_position_x,
             'qr_y': company.ngsign_qr_position_y,
             'qr_size': company.ngsign_qr_size,
+            'pdf_margin_offset': company.ngsign_pdf_margin_offset,
             'label_x': company.ngsign_label_position_x,
             'label_y': company.ngsign_label_position_y,
             'label_width': company.ngsign_label_width,
