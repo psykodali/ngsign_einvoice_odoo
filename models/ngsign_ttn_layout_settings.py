@@ -101,9 +101,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     
 
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html', store=True, sanitize=False)
-    @api.depends('ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
-                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size',
-                 'company_logo', 'company_name', 'primary_color', 'secondary_color', 'font', 'layout_background', 'preview_image')
+    @api.depends('ngsign_qr_position_type', 'ngsign_qr_position_x', 'ngsign_qr_position_y', 'ngsign_qr_size', 
+                 'ngsign_label_position_x', 'ngsign_label_position_y', 'ngsign_label_width', 'ngsign_label_text', 'ngsign_label_font_size')
     def _compute_preview_html(self):
         for record in self:
             # Try to get a recent invoice to use as preview (Posted first, then Draft)
@@ -212,16 +211,21 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         
     def action_apply(self):
         """Update the preview with current form values without saving to company"""
-        # Since fields are stored, saving the record (automatic) triggers compute of preview_html.
+        # The record is already saved by Odoo before this method is called
+        # The compute method has already run and updated preview_html
+        # We just need to tell the client to refresh the form view
         
-        # Re-open the same wizard to keep it open and show updated fields
+        # Force a recompute to ensure preview_html is up to date
+        self._compute_preview_html()
+        
+        # Return an action that refreshes the current view without closing
         return {
             'type': 'ir.actions.act_window',
-            'name': 'TTN Layout Configuration',
             'res_model': 'ngsign.ttn.layout.settings',
             'res_id': self.id,
             'view_mode': 'form',
             'target': 'new',
+            'context': self.env.context,
         }
 
     def action_reset(self):
