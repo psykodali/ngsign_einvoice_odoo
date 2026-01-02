@@ -230,10 +230,7 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         """Update the preview with current form values without saving to company"""
         # Since fields are stored, saving the record (automatic) triggers compute of preview_html.
         # We just need to reload.
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
-        }
+        return True
 
     def action_reset(self):
         """Reset form values to stored company settings"""
