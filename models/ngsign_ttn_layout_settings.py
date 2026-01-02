@@ -106,10 +106,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     preview_html = fields.Html(string='Preview', compute='_compute_preview_html', sanitize=False)
     @api.depends('preview_trigger')
     def _compute_preview_html(self):
-        # Skip recomputation if we're just refreshing the view
-        if self.env.context.get('no_recompute'):
-            return
-            
         for record in self:
             _logger.info(f"=== _compute_preview_html called for record {record.id} ===")
             _logger.info(f"QR Position: x={record.ngsign_qr_position_x}, y={record.ngsign_qr_position_y}")
@@ -233,7 +229,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             'res_id': self.id,
             'view_mode': 'form',
             'target': 'new',
-            'context': dict(self.env.context, no_recompute=True),
         }
 
     def action_reset(self):
