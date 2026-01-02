@@ -222,13 +222,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         # Increment the trigger to force preview recomputation
         self.write({'preview_trigger': self.preview_trigger + 1})
         
-        # Return action to keep the wizard open
+        # Use reload to refresh the view without recreating it
         return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'ngsign.ttn.layout.settings',
-            'res_id': self.id,
-            'view_mode': 'form',
-            'target': 'new',
+            'type': 'ir.actions.client',
+            'tag': 'reload',
         }
 
     def action_reset(self):
