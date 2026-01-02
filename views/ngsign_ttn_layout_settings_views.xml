@@ -6,11 +6,7 @@
         <field name="arch" type="xml">
             <form string="TTN Layout Configuration">
                 <group>
-                    <group string="Preview">
-                        <field name="preview_image" filename="preview_image_name" widget="binary" string="Upload Invoice Image (for preview)"/>
-                        <field name="preview_image_name" invisible="1"/>
-                        <field name="preview_html" nolabel="1" widget="html"/>
-                    </group>
+                    <field name="preview_html" nolabel="1" widget="html"/>
                 </group>
                 <group>
                     <!-- QR Code Settings -->

@@ -65,9 +65,6 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     layout_background = fields.Selection(related='company_id.layout_background', string='Layout Background')
     external_report_layout_id = fields.Many2one(related='company_id.external_report_layout_id', string='Document Layout')
     
-    preview_image = fields.Binary(string="Custom Preview Image", attachment=True, help="Upload a screenshot or image (PNG/JPG) of your invoice to use as the background. PDF files are NOT supported.")
-    preview_image_name = fields.Char(string="Image Name")
-    
     @api.model
     def default_get(self, fields_list):
         defaults = super(NGSignTTNLayoutSettings, self).default_get(fields_list)
