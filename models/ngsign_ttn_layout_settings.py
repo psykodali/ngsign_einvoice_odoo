@@ -213,7 +213,10 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                 
                 # Assign field value
                 if pdf_base64_result:
-                    record.preview_html = f'<iframe src="data:application/pdf;base64,{pdf_base64_result}#toolbar=0&navpanes=0&scrollbar=0" width="100%" height="900px" style="border: none;"></iframe>'
+                    # Add timestamp to prevent browser caching/double-loading
+                    import time
+                    timestamp = int(time.time() * 1000)
+                    record.preview_html = f'<iframe src="data:application/pdf;base64,{pdf_base64_result}#t={timestamp}&toolbar=0&navpanes=0&scrollbar=0" width="100%" height="900px" style="border: none;"></iframe>'
                 elif error_message:
                     record.preview_html = f'<div style="padding: 50px; text-align: center; color: #d9534f;"><h3>Preview Error</h3><p>{error_message}</p></div>'
                 else:
@@ -253,14 +256,9 @@ class NGSignTTNLayoutSettings(models.TransientModel):
         # Increment the trigger to force preview recomputation  
         self.write({'preview_trigger': self.preview_trigger + 1})
         
-        # Return the same window to refresh it
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_mode': 'form',
-            'target': 'new',
-        }
+        # Don't return any action - let Odoo auto-refresh the form
+        # This prevents the double-load issue
+        pass
 
     def action_reset(self):
         """Reset form values to stored company settings"""
