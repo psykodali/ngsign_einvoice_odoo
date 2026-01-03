@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Reset invoice report to use default Odoo paperformat -->
+    <record id="account.account_invoices" model="ir.actions.report">
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+    
     <!-- Custom paperformat with zero top margin for absolute QR positioning -->
-    <!-- This is defined but not applied by default - kept for potential future use -->
+    <!-- This is defined but not applied - kept for potential future use -->
     <record id="paperformat_a4_ngsign" model="report.paperformat">
         <field name="name">A4 - NGSign (No Top Margin)</field>
         <field name="default" eval="False"/>
@@ -18,4 +23,3 @@
         <field name="dpi">90</field>
     </record>
 </odoo>
-
