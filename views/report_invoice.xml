@@ -55,6 +55,9 @@
                             DEBUG: TTN Reference = <t t-esc="o.ngsign_ttn_reference"/>
                             <br/>Position Type = <t t-esc="ngsign_config.get('qr_position_type', 'NOT SET')"/>
                             <br/>QR Data Exists = <t t-esc="bool(qr_code_b64)"/>
+                            <br/>PDF Margin Offset = <t t-esc="ngsign_config.get('pdf_margin_offset', 'NOT SET')"/>mm
+                            <br/>QR Y = <t t-esc="ngsign_config.get('qr_y', 'NOT SET')"/>mm
+                            <br/>Calculated Top = <t t-esc="ngsign_config.get('qr_y', 0) - ngsign_config.get('pdf_margin_offset', 40)"/>mm
                         </div>
                         
                         <!-- QR Code (Absolute position - using configurable offset) -->
