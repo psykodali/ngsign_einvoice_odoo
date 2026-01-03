@@ -15,6 +15,7 @@
     'depends': ['account'],
     'data': [
         'security/ir.model.access.csv',
+        'data/paperformat.xml',
         'views/res_config_settings_views.xml',
         'views/account_move_views.xml',
         'views/account_tax_views.xml',
