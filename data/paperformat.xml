@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Custom paperformat with zero top margin for absolute QR positioning -->
+    <!-- This is defined but not applied by default - kept for potential future use -->
     <record id="paperformat_a4_ngsign" model="report.paperformat">
         <field name="name">A4 - NGSign (No Top Margin)</field>
         <field name="default" eval="False"/>
@@ -16,9 +17,5 @@
         <field name="header_spacing">0</field>
         <field name="dpi">90</field>
     </record>
-    
-    <!-- Apply custom paperformat to invoice report -->
-    <record id="account.account_invoices" model="ir.actions.report">
-        <field name="paperformat_id" ref="paperformat_a4_ngsign"/>
-    </record>
 </odoo>
+

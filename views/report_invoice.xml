@@ -5,15 +5,6 @@
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
             
-            <!-- Add top margin only when using custom positioning to compensate for zero paperformat margin -->
-            <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') != 'builtin'">
-                <style>
-                    .page {
-                        margin-top: 40mm !important;
-                    }
-                </style>
-            </t>
-            
             <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') == 'builtin'">
                 <t t-set="qr_code_b64" t-value="o.get_ttn_qr_code_base64()"/>
                 <t t-if="qr_code_b64">
@@ -66,12 +57,13 @@
                             <br/>QR Data Exists = <t t-esc="bool(qr_code_b64)"/>
                         </div>
                         
-                        <!-- QR Code (Absolute position from page origin - now true Y=0) -->
-                        <div t-attf-style="position: absolute; top: {{ngsign_config['qr_y']}}mm; left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; pointer-events: auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
+                        <!-- QR Code (Absolute position - compensate for page margin with -40mm offset) -->
+                        <!-- With standard paperformat, Y=0 will appear ~40mm from top. Subtract 40mm to reach true top -->
+                        <div t-attf-style="position: absolute; top: calc({{ngsign_config['qr_y']}}mm - 40mm); left: {{ngsign_config['qr_x']}}mm; width: {{ngsign_config['qr_size']}}mm; height: {{ngsign_config['qr_size']}}mm; z-index: 9999; pointer-events: auto; {{ ngsign_config.get('show_debug_info') and 'border: 2px solid red;' or '' }}">
                             <img t-att-src="'data:image/png;base64,%s' % qr_code_b64" style="width: 100%; height: 100%;"/>
                         </div>
                         <!-- TTN Reference (Absolute position) -->
-                        <div t-attf-style="position: absolute; top: {{ngsign_config['label_y']}}mm; left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; pointer-events: auto; font-size: {{ngsign_config['label_font_size']}}pt;">
+                        <div t-attf-style="position: absolute; top: calc({{ngsign_config['label_y']}}mm - 40mm); left: {{ngsign_config['label_x']}}mm; width: {{ngsign_config['label_width']}}mm; z-index: 9999; pointer-events: auto; font-size: {{ngsign_config['label_font_size']}}pt;">
                             <span t-if="ngsign_config['label_text']" t-esc="ngsign_config['label_text']" style="margin-right: 4px;"/>
                             <span t-esc="o.ngsign_ttn_reference" style="font-weight: bold;"/>
                         </div>
