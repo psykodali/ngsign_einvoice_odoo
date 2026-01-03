@@ -245,18 +245,23 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     def action_save(self):
         """Save and close the wizard - save fields to company"""
         company = self.env.company
+        
+        # Write all fields - the inverse methods will handle ir.config_parameter storage
         company.sudo().write({
-            'ngsign_qr_position_type': self.ngsign_qr_position_type,
             'ngsign_qr_position_x': self.ngsign_qr_position_x,
             'ngsign_qr_position_y': self.ngsign_qr_position_y,
             'ngsign_qr_size': self.ngsign_qr_size,
-            'ngsign_pdf_margin_offset': self.ngsign_pdf_margin_offset,
             'ngsign_label_position_x': self.ngsign_label_position_x,
             'ngsign_label_position_y': self.ngsign_label_position_y,
             'ngsign_label_width': self.ngsign_label_width,
             'ngsign_label_text': self.ngsign_label_text,
             'ngsign_label_font_size': self.ngsign_label_font_size,
         })
+        
+        # Computed fields need to be set separately to trigger inverse
+        company.ngsign_qr_position_type = self.ngsign_qr_position_type
+        company.ngsign_pdf_margin_offset = self.ngsign_pdf_margin_offset
+        
         return {'type': 'ir.actions.act_window_close'}
         
     def action_apply(self):
