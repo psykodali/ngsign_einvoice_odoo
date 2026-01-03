@@ -168,23 +168,40 @@ class NGSignTTNLayoutSettings(models.TransientModel):
                     _logger.info(f"Preview config: {preview_config}")
 
                     # Mock NGSign data on the invoice record
-                    # Generate a proper QR code for the preview text
+                    # Generate a black square with white "QRCode" text for preview
                     try:
-                        import qrcode
+                        from PIL import Image, ImageDraw, ImageFont
                         import io
                         
-                        qr = qrcode.QRCode(version=1, box_size=10, border=4)
-                        qr.add_data('ABC123XYZ-PREVIEW')
-                        qr.make(fit=True)
+                        # Create a black square
+                        img_size = 200
+                        img = Image.new('RGB', (img_size, img_size), color='black')
+                        draw = ImageDraw.Draw(img)
                         
-                        img = qr.make_image(fill_color="black", back_color="white")
+                        # Add white "QRCode" text in the center
+                        text = "QRCode"
+                        try:
+                            # Try to use a decent font
+                            font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 30)
+                        except:
+                            # Fallback to default font
+                            font = ImageFont.load_default()
+                        
+                        # Get text bounding box to center it
+                        bbox = draw.textbbox((0, 0), text, font=font)
+                        text_width = bbox[2] - bbox[0]
+                        text_height = bbox[3] - bbox[1]
+                        
+                        position = ((img_size - text_width) // 2, (img_size - text_height) // 2)
+                        draw.text(position, text, fill='white', font=font)
+                        
                         buffer = io.BytesIO()
                         img.save(buffer, format='PNG')
                         buffer.seek(0)
                         
                         dummy_qr = base64.b64encode(buffer.getvalue())
                     except Exception as qr_error:
-                        _logger.warning(f"Could not generate QR code for preview: {qr_error}")
+                        _logger.warning(f"Could not generate preview QR placeholder: {qr_error}")
                         # Fallback to 1x1 pixel
                         dummy_qr = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
                     
