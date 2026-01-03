@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_inherit_ngsign" inherit_id="account.report_invoice_document">
-        <!-- Add top margin to page content to compensate for zero paperformat margin -->
-        <xpath expr="//div[hasclass('page')]" position="attributes">
-            <attribute name="style" add="margin-top: 40mm;" separator=";"/>
-        </xpath>
-        
         <!-- Builtin position: inside page for flow layout -->
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>
+            
+            <!-- Add top margin only when using custom positioning to compensate for zero paperformat margin -->
+            <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') != 'builtin'">
+                <style>
+                    .page {
+                        margin-top: 40mm !important;
+                    }
+                </style>
+            </t>
+            
             <t t-if="o.ngsign_ttn_reference and ngsign_config.get('qr_position_type') == 'builtin'">
                 <t t-set="qr_code_b64" t-value="o.get_ttn_qr_code_base64()"/>
                 <t t-if="qr_code_b64">
@@ -76,4 +81,3 @@
         </xpath>
     </template>
 </odoo>
-
