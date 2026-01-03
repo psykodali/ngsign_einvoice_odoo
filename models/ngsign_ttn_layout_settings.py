@@ -91,6 +91,8 @@ class NGSignTTNLayoutSettings(models.TransientModel):
             defaults['ngsign_qr_position_y'] = company.ngsign_qr_position_y
         if 'ngsign_qr_size' in fields_list:
             defaults['ngsign_qr_size'] = company.ngsign_qr_size
+        if 'ngsign_pdf_margin_offset' in fields_list:
+            defaults['ngsign_pdf_margin_offset'] = company.ngsign_pdf_margin_offset
             
         if 'ngsign_label_position_x' in fields_list:
             defaults['ngsign_label_position_x'] = company.ngsign_label_position_x
