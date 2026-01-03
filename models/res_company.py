@@ -27,12 +27,29 @@ class ResCompany(models.Model):
     ngsign_qr_position_y = fields.Integer(string='TTN QR Position Y (mm)', default=10)
     ngsign_qr_size = fields.Integer(string='TTN QR Size (mm)', default=30)
     
-    # PDF margin offset to compensate for wkhtmltopdf margins
+    # PDF margin offset to compensate for wkhtmltopdf margins (stored in ir.config_parameter)
     ngsign_pdf_margin_offset = fields.Integer(
-        string='PDF Top Margin Offset (mm)', 
-        default=40,
+        string='PDF Top Margin Offset (mm)',
+        compute='_compute_pdf_margin_offset',
+        inverse='_inverse_pdf_margin_offset',
+        store=False,
         help='Offset to compensate for PDF page margins. Increase if QR appears too low, decrease if too high.'
     )
+    
+    def _compute_pdf_margin_offset(self):
+        """Read PDF margin offset from system parameters"""
+        IrConfigParameter = self.env['ir.config_parameter'].sudo()
+        for record in self:
+            param_key = f'ngsign.pdf_margin_offset.company_{record.id}'
+            value = IrConfigParameter.get_param(param_key, '40')
+            record.ngsign_pdf_margin_offset = int(value)
+    
+    def _inverse_pdf_margin_offset(self):
+        """Write PDF margin offset to system parameters"""
+        IrConfigParameter = self.env['ir.config_parameter'].sudo()
+        for record in self:
+            param_key = f'ngsign.pdf_margin_offset.company_{record.id}'
+            IrConfigParameter.set_param(param_key, str(record.ngsign_pdf_margin_offset or 40))
     
     ngsign_label_position_x = fields.Integer(string='TTN Label Position X (mm)', default=150)
     ngsign_label_position_y = fields.Integer(string='TTN Label Position Y (mm)', default=10)
