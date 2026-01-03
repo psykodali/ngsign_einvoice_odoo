@@ -42,7 +42,10 @@ class ResCompany(models.Model):
         for record in self:
             param_key = f'ngsign.pdf_margin_offset.company_{record.id}'
             value = IrConfigParameter.get_param(param_key, '40')
-            record.ngsign_pdf_margin_offset = int(value)
+            try:
+                record.ngsign_pdf_margin_offset = int(value)
+            except (ValueError, TypeError):
+                record.ngsign_pdf_margin_offset = 40
     
     def _inverse_pdf_margin_offset(self):
         """Write PDF margin offset to system parameters"""
