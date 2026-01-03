@@ -31,6 +31,10 @@
                             <label for="ngsign_qr_size" class="o_form_label">QR Size (mm)</label>
                             <field name="ngsign_qr_size"/>
                         </div>
+                        <div class="col-6">
+                            <label for="ngsign_pdf_margin_offset" class="o_form_label">PDF Top Margin Offset (mm)</label>
+                            <field name="ngsign_pdf_margin_offset"/>
+                        </div>
                     </div>
 
                     <div class="o_horizontal_separator mt32">Reference Label Configuration</div>

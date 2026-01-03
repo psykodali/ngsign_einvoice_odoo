@@ -35,8 +35,17 @@ class NGSignTTNLayoutSettings(models.TransientModel):
     )
     
     ngsign_qr_size = fields.Integer(
+        related='company_id.ngsign_qr_size',
+        readonly=False,
         string='QR Code Size (mm)',
         default=30
+    )
+    
+    ngsign_pdf_margin_offset = fields.Integer(
+        related='company_id.ngsign_pdf_margin_offset',
+        readonly=False,
+        string='PDF Top Margin Offset (mm)',
+        help='Offset to compensate for PDF page margins. Increase if QR appears too low, decrease if too high.'
     )
     
     ngsign_label_width = fields.Integer(

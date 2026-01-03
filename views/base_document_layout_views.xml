@@ -11,6 +11,7 @@
                         <field name="ngsign_qr_position_type"/>
                         <field name="ngsign_qr_position_x" invisible="ngsign_qr_position_type == 'builtin'"/>
                         <field name="ngsign_qr_position_y" invisible="ngsign_qr_position_type == 'builtin'"/>
+                        <field name="ngsign_pdf_margin_offset" invisible="ngsign_qr_position_type == 'builtin'"/>
                     </group>
                     <group>
                         <field name="ngsign_label_position_x" invisible="ngsign_qr_position_type == 'builtin'"/>
