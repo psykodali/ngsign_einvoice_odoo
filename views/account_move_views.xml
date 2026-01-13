@@ -14,8 +14,12 @@
                 <field name="ngsign_show_debug_json_button" invisible="1"/>
                 <field name="ngsign_show_transaction_uuid" invisible="1"/>
                 <field name="ngsign_show_invoice_uuid" invisible="1"/>
+                <field name="ngsign_pds_url" invisible="1"/>
                 <button name="ngsign_einvoice_odoo.action_sign_ngsign_js" string="Sign with NGSign" type="action" class="oe_highlight"
-                        invisible="state != 'posted' or ngsign_status in ('pending', 'signed', 'TTN Signed', 'signed_ngsign')"/>
+                        invisible="state != 'posted' or ngsign_status in ('pending', 'pending_signature', 'signed', 'TTN Signed', 'signed_ngsign')"/>
+                <button name="action_open_pds" string="Open Signing Page" type="object" class="oe_highlight"
+                        invisible="not ngsign_pds_url or ngsign_status != 'pending_signature'"
+                        help="Open the Page de Signature to complete signing with your DigiGO or SSCD certificate"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status in ('draft', 'CANCELLED', 'TTN Signed')"/>
                 <button name="action_generate_debug_json" string="Generate Debug JSON" type="object"
@@ -50,7 +54,7 @@
                 <field name="ngsign_status" optional="show" widget="badge"
                        decoration-success="ngsign_status == 'TTN Signed'"
                        decoration-info="ngsign_status == 'signed_ngsign'"
-                       decoration-warning="ngsign_status == 'pending'"
+                       decoration-warning="ngsign_status in ('pending', 'pending_signature')"
                        decoration-danger="ngsign_status in ('error', 'TTN_REJECTED', 'CANCELLED')"/>
             </field>
         </field>

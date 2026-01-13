@@ -16,8 +16,10 @@ class AccountMove(models.Model):
     ngsign_invoice_uuid = fields.Char(string='NGSign Invoice UUID', copy=False, help="Unique UUID for the specific invoice within the transaction")
     ngsign_ttn_reference = fields.Char(string='TTN eInvoice ID', copy=False, help="Unique reference returned by TTN after signing")
     ngsign_ttn_qr_code = fields.Binary(string='TTN QR Code', copy=False, attachment=True)
+    ngsign_pds_url = fields.Char(string='NGSign PDS URL', copy=False, help="URL to the Page de Signature for DigiGO/SSCD certificates")
     ngsign_status = fields.Selection([
         ('draft', 'Draft'),
+        ('pending_signature', 'Pending Signature'),
         ('pending', 'Pending'),
         ('TTN Signed', 'TTN Signed'),
         ('CANCELLED', 'Cancelled'),
@@ -582,16 +584,23 @@ class AccountMove(models.Model):
         """
         Step 2 of signing process: Send invoices to NGSign.
         This is called by the JS client action after preparation.
+        Supports both SEAL (automatic) and DigiGO/SSCD (manual) certificate types.
         """
         # Support bulk signing
         if not self:
             return
             
         client = self._get_ngsign_client()
-        passphrase = self.env['ir.config_parameter'].sudo().get_param('ngsign.passphrase')
+        params = self.env['ir.config_parameter'].sudo()
         
-        if not passphrase:
-            raise UserError(_("SEAL Passphrase is missing in Settings."))
+        # Get certificate type
+        cert_type = params.get_param('ngsign.certificate_type', 'seal')
+        
+        # Validate passphrase for SEAL certificates
+        if cert_type == 'seal':
+            passphrase = params.get_param('ngsign.passphrase')
+            if not passphrase:
+                raise UserError(_("SEAL Passphrase is missing in Settings."))
 
         try:
             invoices_payload = []
@@ -613,16 +622,46 @@ class AccountMove(models.Model):
                 if move.ngsign_notify_owner:
                     notify_owner = True
 
-            # The API expects a list of invoices for transaction
-            use_v2 = self.env['ir.config_parameter'].sudo().get_param('ngsign.use_v2_endpoint', 'False') == 'True'
-            
-            response = client.create_transaction_seal(
-                invoices_payload, 
-                passphrase, 
-                notify_owner=notify_owner,
-                cc_email=cc_email,
-                use_v2=use_v2
-            )
+            # Route to appropriate endpoint based on certificate type
+            if cert_type == 'seal':
+                # SEAL Certificate - Automatic signing
+                use_v2 = params.get_param('ngsign.use_v2_endpoint', 'False') == 'True'
+                
+                response = client.create_transaction_seal(
+                    invoices_payload, 
+                    passphrase, 
+                    notify_owner=notify_owner,
+                    cc_email=cc_email,
+                    use_v2=use_v2
+                )
+                
+                # Update status to pending (automatic signing in progress)
+                target_status = 'pending'
+                pds_url = None
+                
+            else:
+                # DigiGO or SSCD Certificate - Manual signing via PDS
+                signer_email = params.get_param('ngsign.signer_email')
+                
+                if signer_email:
+                    # Use advanced endpoint with delegated signer
+                    response = client.create_transaction_advanced(
+                        invoices_payload,
+                        signer_email=signer_email,
+                        cc_email=cc_email
+                    )
+                else:
+                    # Use basic transaction endpoint
+                    response = client.create_transaction(invoices_payload)
+                
+                # Generate PDS URL for user to complete signing
+                response_data = response.get('object', {})
+                transaction_uuid = response_data.get('uuid')
+                pds_base_url = params.get_param('ngsign.pds_base_url', 'https://sandbox.ng-sign.com/pds/#/teif/invoice/')
+                pds_url = client.generate_pds_url(transaction_uuid, pds_base_url)
+                
+                # Update status to pending_signature (awaiting user action)
+                target_status = 'pending_signature'
             
             # The API returns a wrapper { "object": { ... }, "errorCode": ... }
             response_data = response.get('object', {})
@@ -643,11 +682,16 @@ class AccountMove(models.Model):
                     matched_inv = invoices_data[0]
                 
                 if matched_inv:
-                    move.write({
+                    write_vals = {
                         'ngsign_transaction_uuid': transaction_uuid,
                         'ngsign_invoice_uuid': matched_inv.get('uuid'),
-                        'ngsign_status': 'pending'
-                    })
+                        'ngsign_status': target_status
+                    }
+                    
+                    if pds_url:
+                        write_vals['ngsign_pds_url'] = pds_url
+                    
+                    move.write(write_vals)
                 else:
                     _logger.warning(f"NGSign: Could not find UUID for invoice {move.name}")
                     move.write({'ngsign_status': 'error'})
@@ -661,6 +705,14 @@ class AccountMove(models.Model):
                     ('name', '=', attachment_name)
                 ])
                 attachments.unlink()
+            
+            # For DigiGO/SSCD, return action to open PDS URL
+            if cert_type in ('digigo', 'sscd') and pds_url:
+                return {
+                    'type': 'ir.actions.act_url',
+                    'url': pds_url,
+                    'target': 'new',
+                }
                 
         except Exception as e:
             self.write({'ngsign_status': 'error'})
@@ -701,7 +753,23 @@ class AccountMove(models.Model):
         # We can just redirect to send, but prepare step is skipped if called directly.
         # Ideally this should not be called anymore from UI.
         self.action_ngsign_prepare()
-        self.action_ngsign_send()
+        return self.action_ngsign_send()
+
+    def action_open_pds(self):
+        """
+        Open the Page de Signature (PDS) URL in a new browser window.
+        Used for DigiGO and SSCD certificates.
+        """
+        self.ensure_one()
+        
+        if not self.ngsign_pds_url:
+            raise UserError(_("No PDS URL found. Please sign the invoice first."))
+        
+        return {
+            'type': 'ir.actions.act_url',
+            'url': self.ngsign_pds_url,
+            'target': 'new',
+        }
 
     def action_check_ngsign_status(self):
         self.ensure_one()
