@@ -9,6 +9,8 @@ async function actionSignNGSignJs(env, action) {
     const ui = env.services.ui;
     const notification = env.services.notification;
 
+    const actionService = env.services.action;
+
     const activeIds = (action.context && action.context.active_ids) || (action.params && action.params.active_ids);
 
     if (!activeIds || activeIds.length === 0) {
@@ -30,12 +32,17 @@ async function actionSignNGSignJs(env, action) {
         ui.unblock();
         ui.block({ message: _t("Sending eInvoice(s) for signature") });
 
-        await orm.call("account.move", "action_ngsign_send", [activeIds]);
+        const result = await orm.call("account.move", "action_ngsign_send", [activeIds]);
 
         // Show success notification if needed, or let the backend action handle it (e.g. reload)
         notification.add(_t("Process completed successfully."), { type: "success" });
 
-        // Return an action to reload the view or similar
+        // If result contains an action (e.g. act_url for DigiGO), execute it
+        if (result && result.type) {
+            await actionService.doAction(result);
+        }
+
+        // Always reload the view to show updated status
         return { type: "ir.actions.client", tag: "reload" };
 
     } catch (error) {
