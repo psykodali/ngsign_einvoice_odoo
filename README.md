@@ -13,8 +13,9 @@ This module integrates Odoo with the **NGSign** platform to enable electronic in
 ## Installation
 
 1.  Clone this repository into your Odoo addons path.
-2.  Update your Odoo app list.
-3.  Install the **NGSign e-invoice** module.
+2.  Restart Odoo.
+3.  Update your Odoo app list.
+4.  Install the **NGSign e-invoice** module.
 
 ## Configuration
 
@@ -25,7 +26,8 @@ This module integrates Odoo with the **NGSign** platform to enable electronic in
     -   **NGSign API URL**: The base URL for the NGSign API (e.g., `https://api.ng-sign.com`).
     -   **Bearer Token**: Your NGSign API Bearer Token.
     -   **SEAL Passphrase**: The passphrase for your SEAL certificate.
-    -   **Signer Email**: (Optional) Email of the delegated signer.
+    -   **QRCode and TTN UID PDF layout**: Set the QRCode and TTN UID coordinate under **NGSIGN (Seal V1) PDF Generation layout**.
+    -   **BETA:Builtin (Seal V2) PDF layout**: Seal V2 must be activated under developer settings to enable this feature wich generate the PDF in Odoo.
 
 ### 2. Tax Configuration
 1.  Go to **Accounting > Configuration > Taxes**.
