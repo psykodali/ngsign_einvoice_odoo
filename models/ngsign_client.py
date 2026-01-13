@@ -119,36 +119,19 @@ class NGSignClient:
         response.raise_for_status()
         return response.json()
 
-    def create_transaction(self, invoices_payload):
-        """
-        Create a transaction for DigiGO/SSCD certificate signing.
-        This creates a transaction that requires user interaction via PDS.
-        
-        Endpoint: POST /protected/invoice/transaction
-        
-        :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
-        :return: Response with transaction UUID and details
-        """
-        url = f"{self.api_url}/protected/invoice/transaction"
-        headers = self._get_headers()
-        
-        response = requests.post(url, headers=headers, json=invoices_payload)
-        response.raise_for_status()
-        return response.json()
-
     def create_transaction_advanced(self, invoices_payload, signer_email=None, cc_email=None):
         """
         Create an advanced transaction with optional delegated signer.
         This creates a transaction for DigiGO/SSCD that requires user interaction via PDS.
         
-        Endpoint: POST /protected/invoice/transaction/advanced
+        Endpoint: POST /protected/invoice/v2/transaction/advanced
         
         :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
         :param signer_email: Email of the delegated signer (optional)
         :param cc_email: Email to CC the final PDF (optional)
         :return: Response with transaction UUID and details
         """
-        url = f"{self.api_url}/protected/invoice/transaction/advanced"
+        url = f"{self.api_url}/protected/invoice/v2/transaction/advanced"
         headers = self._get_headers()
         
         payload = {

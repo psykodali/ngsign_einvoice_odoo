@@ -643,16 +643,12 @@ class AccountMove(models.Model):
                 # DigiGO or SSCD Certificate - Manual signing via PDS
                 signer_email = params.get_param('ngsign.signer_email')
                 
-                if signer_email:
-                    # Use advanced endpoint with delegated signer
-                    response = client.create_transaction_advanced(
-                        invoices_payload,
-                        signer_email=signer_email,
-                        cc_email=cc_email
-                    )
-                else:
-                    # Use basic transaction endpoint
-                    response = client.create_transaction(invoices_payload)
+                # Always use advanced endpoint (v2)
+                response = client.create_transaction_advanced(
+                    invoices_payload,
+                    signer_email=signer_email,
+                    cc_email=cc_email
+                )
                 
                 # Generate PDS URL for user to complete signing
                 _logger.info(f"NGSign Debug: Response type={type(response)}, content={response}")
@@ -665,7 +661,7 @@ class AccountMove(models.Model):
                     raise UserError(_("NGSign API Error: %s") % msg)
 
                 transaction_uuid = response_data.get('uuid')
-                pds_base_url = params.get_param('ngsign.pds_base_url', 'https://sandbox.ng-sign.com/pds/#/teif/invoice/')
+                pds_base_url = params.get_param('ngsign.pds_base_url', 'https://sandbox.ng-sign.com/pdsv2/#/invoice/')
                 pds_url = client.generate_pds_url(transaction_uuid, pds_base_url)
                 
                 # Update status to pending_signature (awaiting user action)

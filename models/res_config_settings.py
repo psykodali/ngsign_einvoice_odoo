@@ -30,7 +30,7 @@ class ResConfigSettings(models.TransientModel):
     ngsign_use_v2_endpoint = fields.Boolean(string='Use V2 Seal Endpoint', config_parameter='ngsign.use_v2_endpoint', 
                                              help='Use V2 endpoint (no PDF upload, local stamping) - Only for SEAL certificates')
     ngsign_pds_base_url = fields.Char(string='PDS Base URL', config_parameter='ngsign.pds_base_url', 
-                                       default='https://sandbox.ng-sign.com/pds/#/teif/invoice/',
+                                       default='https://sandbox.ng-sign.com/pdsv2/#/invoice/',
                                        help='Base URL for the Page de Signature (PDS) - Used for DigiGO and SSCD certificates')
 
     def set_values(self):
@@ -45,7 +45,7 @@ class ResConfigSettings(models.TransientModel):
         param.set_param('ngsign.signer_email', self.ngsign_signer_email or '')
         param.set_param('ngsign.notify_owner_default', str(self.ngsign_notify_owner_default))
         param.set_param('ngsign.use_v2_endpoint', str(self.ngsign_use_v2_endpoint))
-        param.set_param('ngsign.pds_base_url', self.ngsign_pds_base_url or 'https://sandbox.ng-sign.com/pds/#/teif/invoice/')
+        param.set_param('ngsign.pds_base_url', self.ngsign_pds_base_url or 'https://sandbox.ng-sign.com/pdsv2/#/invoice/')
         
         # Log what we are saving
         import logging
@@ -65,7 +65,7 @@ class ResConfigSettings(models.TransientModel):
             ngsign_signer_email=param.get_param('ngsign.signer_email'),
             ngsign_notify_owner_default=param.get_param('ngsign.notify_owner_default', 'True') == 'True',
             ngsign_use_v2_endpoint=param.get_param('ngsign.use_v2_endpoint', 'False') == 'True',
-            ngsign_pds_base_url=param.get_param('ngsign.pds_base_url', default='https://sandbox.ng-sign.com/pds/#/teif/invoice/'),
+            ngsign_pds_base_url=param.get_param('ngsign.pds_base_url', default='https://sandbox.ng-sign.com/pdsv2/#/invoice/'),
         )
         return res
 
