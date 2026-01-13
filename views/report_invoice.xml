@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_invoice_document_inherit_ngsign" inherit_id="account.report_invoice_document">
-        <!-- Add top margin to page content to compensate for zero paperformat margin -->
-        <xpath expr="//div[hasclass('page')]" position="attributes">
-            <attribute name="style" add="margin-top: 40mm;" separator=";"/>
-        </xpath>
-        
         <!-- Builtin position: inside page for flow layout -->
         <xpath expr="//div[hasclass('page')]" position="inside">
             <t t-set="ngsign_config" t-value="o.get_ngsign_print_config()"/>

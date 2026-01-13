@@ -35,16 +35,12 @@
                                         <label for="ngsign_notify_owner_default" class="col-3 o_light_label"/>
                                         <field name="ngsign_notify_owner_default" class="col-9"/>
                                     </div>
-                                    <div class="row mt8">
-                                        <label for="ngsign_use_v2_endpoint" class="col-3 o_light_label"/>
-                                        <field name="ngsign_use_v2_endpoint" class="col-9"/>
-                                    </div>
                                     
                                     <div class="row mt16">
-                                        <button name="action_open_ttn_layout_settings" string="Builtin PDF generation Layout" type="object" class="oe_link" icon="fa-th-large"/>
+                                        <button name="action_open_ttn_layout_settings" string="BETA: Builtin (Seal V2) PDF generation Layout" type="object" class="oe_link" icon="fa-th-large"/>
                                     </div>
                                     <div class="row mt16">
-                                        <button name="action_open_template_settings" string="NGSIGN PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
+                                        <button name="action_open_template_settings" string="NGSIGN (Seal V1) PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
                                     <div class="row mt16">
                                         <button name="action_open_developer_settings" string="Developer Options" type="object" class="oe_link" icon="fa-cogs"/>

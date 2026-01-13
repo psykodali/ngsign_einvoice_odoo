@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <form string="Developer Options">
                 <group>
+                    <field name="use_v2_endpoint"/>
                     <field name="show_debug_json_button"/>
                     <field name="show_transaction_uuid"/>
                     <field name="show_invoice_uuid"/>
