@@ -34,17 +34,17 @@
                                     </div>
                                     
                                     <!-- SEAL-specific fields -->
-                                    <div class="row mt8" attrs="{'invisible': [('ngsign_certificate_type', '!=', 'seal')]}">
+                                    <div class="row mt8" invisible="ngsign_certificate_type != 'seal'">
                                         <label for="ngsign_passphrase" class="col-3 o_light_label"/>
-                                        <field name="ngsign_passphrase" class="col-9" attrs="{'required': [('ngsign_certificate_type', '=', 'seal')]}"/>
+                                        <field name="ngsign_passphrase" class="col-9" required="ngsign_certificate_type == 'seal'"/>
                                     </div>
-                                    <div class="row mt8" attrs="{'invisible': [('ngsign_certificate_type', '!=', 'seal')]}">
+                                    <div class="row mt8" invisible="ngsign_certificate_type != 'seal'">
                                         <label for="ngsign_use_v2_endpoint" class="col-3 o_light_label"/>
                                         <field name="ngsign_use_v2_endpoint" class="col-9"/>
                                     </div>
                                     
                                     <!-- DigiGO/SSCD-specific fields -->
-                                    <div class="row mt8" attrs="{'invisible': [('ngsign_certificate_type', '=', 'seal')]}">
+                                    <div class="row mt8" invisible="ngsign_certificate_type == 'seal'">
                                         <label for="ngsign_pds_base_url" class="col-3 o_light_label"/>
                                         <field name="ngsign_pds_base_url" class="col-9"/>
                                     </div>
@@ -59,10 +59,10 @@
                                         <field name="ngsign_notify_owner_default" class="col-9"/>
                                     </div>
                                     
-                                    <div class="row mt16" attrs="{'invisible': [('ngsign_certificate_type', '!=', 'seal')]}">
+                                    <div class="row mt16" invisible="ngsign_certificate_type != 'seal'">
                                         <button name="action_open_ttn_layout_settings" string="BETA: Builtin (Seal V2) PDF generation Layout" type="object" class="oe_link" icon="fa-th-large"/>
                                     </div>
-                                    <div class="row mt16" attrs="{'invisible': [('ngsign_certificate_type', '!=', 'seal')]}">
+                                    <div class="row mt16" invisible="ngsign_certificate_type != 'seal'">
                                         <button name="action_open_template_settings" string="NGSIGN (Seal V1) PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
                                     <div class="row mt16">
