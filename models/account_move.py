@@ -668,6 +668,10 @@ class AccountMove(models.Model):
                 target_status = 'pending_signature'
             
             # The API returns a wrapper { "object": { ... }, "errorCode": ... }
+            if not isinstance(response, dict):
+                 # This check handles the SEAL case or if the previous check was missed
+                 raise UserError(_("Unexpected response from NGSign API (Global Check): %s - Type: %s") % (str(response), type(response)))
+            
             response_data = response.get('object', {})
             transaction_uuid = response_data.get('uuid')
             invoices_data = response_data.get('invoices', [])
