@@ -520,15 +520,15 @@ class AccountMove(models.Model):
             'clientEmail': self.partner_id.email or '',
             'invoiceTIEF': teif_invoice,
             'configuration': {
-                'qrPositionX': self.company_id.ngsign_qr_position_x,
-                'qrPositionY': self.company_id.ngsign_qr_position_y,
+                'qrPositionX': int(params.get_param('ngsign.qr_position_x', 10)),
+                'qrPositionY': int(params.get_param('ngsign.qr_position_y', 10)),
                 'qrPositionP': int(params.get_param('ngsign.qr_position_p', 0)),
                 'qrRatio': float(params.get_param('ngsign.qr_ratio', 0.5)),
                 'textPositionX': int(params.get_param('ngsign.text_position_x', 40)),
                 'textPositionY': int(params.get_param('ngsign.text_position_y', 40)),
                 'textPage': int(params.get_param('ngsign.text_page', 0)),
-                'labelPositionX': self.company_id.ngsign_label_position_x,
-                'labelPositionY': self.company_id.ngsign_label_position_y,
+                'labelPositionX': int(params.get_param('ngsign.label_position_x', 150)),
+                'labelPositionY': int(params.get_param('ngsign.label_position_y', 10)),
                 'labelPositionP': int(params.get_param('ngsign.label_position_p', 0)),
                 'allPages': params.get_param('ngsign.all_pages', 'False') == 'True'
             }
