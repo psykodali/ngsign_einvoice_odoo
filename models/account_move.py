@@ -719,6 +719,7 @@ class AccountMove(models.Model):
                 attachments.unlink()
             
             # For DigiGO/SSCD, return action to open PDS URL
+            _logger.info(f"NGSign: Checking redirection - cert_type={cert_type}, pds_url={pds_url}")
             if cert_type in ('digigo', 'sscd') and pds_url:
                 return {
                     'type': 'ir.actions.act_url',

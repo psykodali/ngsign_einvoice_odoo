@@ -62,8 +62,8 @@
                                     <div class="row mt16" invisible="ngsign_certificate_type != 'seal'">
                                         <button name="action_open_ttn_layout_settings" string="BETA: Builtin (Seal V2) PDF generation Layout" type="object" class="oe_link" icon="fa-th-large"/>
                                     </div>
-                                    <div class="row mt16" invisible="ngsign_certificate_type != 'seal'">
-                                        <button name="action_open_template_settings" string="NGSIGN (Seal V1) PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
+                                    <div class="row mt16">
+                                        <button name="action_open_template_settings" string="NGSIGN PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
                                     <div class="row mt16">
                                         <button name="action_open_developer_settings" string="Developer Options" type="object" class="oe_link" icon="fa-cogs"/>
