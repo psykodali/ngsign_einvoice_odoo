@@ -655,6 +655,10 @@ class AccountMove(models.Model):
                     response = client.create_transaction(invoices_payload)
                 
                 # Generate PDS URL for user to complete signing
+                _logger.info(f"NGSign Debug: Response type={type(response)}, content={response}")
+                if not isinstance(response, dict):
+                    raise UserError(_("Unexpected response from NGSign API: %s") % str(response))
+
                 response_data = response.get('object', {})
                 transaction_uuid = response_data.get('uuid')
                 pds_base_url = params.get_param('ngsign.pds_base_url', 'https://sandbox.ng-sign.com/pds/#/teif/invoice/')

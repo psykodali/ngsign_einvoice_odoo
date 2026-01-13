@@ -124,12 +124,12 @@ class NGSignClient:
         Create a transaction for DigiGO/SSCD certificate signing.
         This creates a transaction that requires user interaction via PDS.
         
-        Endpoint: POST /protected/invoice/xml/transaction
+        Endpoint: POST /protected/invoice/transaction
         
         :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
         :return: Response with transaction UUID and details
         """
-        url = f"{self.api_url}/protected/invoice/transaction/advanced/"
+        url = f"{self.api_url}/protected/invoice/transaction"
         headers = self._get_headers()
         
         response = requests.post(url, headers=headers, json=invoices_payload)
