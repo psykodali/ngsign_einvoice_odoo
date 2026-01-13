@@ -1,0 +1,623 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "NGSign API for El Fatoora Services (factures électroniques en Tunisie)",
+        "description": "# Introduction\n\n**NGSign Web Services for Elfatoura** est une plateforme sécurisée et robuste conçue pour générer et signer électroniquement des factures en totale conformité avec le format de facture électronique tunisien (TEIF) et les exigences réglementaires de la plateforme Tunisie TradeNet (TTN). Elle permet une intégration transparente de signatures numériques juridiquement contraignantes dans les systèmes de facturation et financiers tout en garantissant la conformité de bout en bout avec les normes nationales de facturation électronique.\n\nCet espace est dédié aux développeurs et complète la documentation technique fournie par NGSign. L'utilisation des services nécessite un compte sur [sandbox.ng-sign.com](http://sandbox.ng-sign.com) avec l'option API activée.\n\n# Fonctionnement de ces services\n\n> **Note :** Ces service sont destinés aux applications qui génèrent déjà des documents XML conformes à la norme TEIF de manière autonome.\n\nLes services suivants permettent de créer et de signer des transactions de facture à l'aide d'un cachet électronique (Cachet Serveur). Ce processus est automatisé et ne nécessite pas d'interaction utilisateur sur la Page de Signature (PDS).\n\nDès l'apposition du cachet, le service se charge aussi de transmettre la facture à TTN pour la récupération du fichier XML final. La différence de traitement entre les deux appels */seal* :\n\n| Service                                    | Fonctionnement                                                                                                                                                                                                                                                 |\n| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| /protected/invoice/xml/transaction/seal    | Créer une transaction et signer en utilisant un cachet (traitement automatique). <br> **Ce service extrait également le QRCode et l'identifiant unique pour les ajouter sur la facture PDF**                                                                        |\n| /protected/invoice/xml/v2/transaction/seal | Créer une transaction et signer en utilisant un cachet (traitement automatique).<br> **Ce service n'applique pas le traitement post-signature sur le PDF** (l'apposition du QRCOde et l'identifiant unique sur le PDF est à la charge de l'application appelante). |\n\nDes services supplémentaires sont également disponibles pour gérer les transactions de factures, y compris la vérification du statut, le téléchargement de fichiers et les annulations.\n# Sandbox\n\nPour accéder aux services web protégés (/protected), l'utilisateur doit fournir un jeton JSON Web Token (JWT) obtenu depuis l'application Web NGSign. Ce jeton doit être inclus dans l'en-tête HTTP Authorization en utilisant le schéma d'authentification Bearer : Authorization: Bearer <votre-token>\n\nPoints clés :\n- Le JWT est généré via l'application Web NGSign après une connexion réussie.\n- Le jeton n'expire pas à moins d'être explicitement régénéré.\n- La génération d'un nouveau jeton invalidera automatiquement tous les jetons précédemment émis pour cet utilisateur.\n- Le jeton donne accès à tous les services /protected autorisés conformément aux rôles et permissions attribués à l'utilisateur.\n\nCette approche permet une intégration sécurisée des services protégés de NGSign dans des flux de travail automatisés et des systèmes tiers sans maintenir une authentification basée sur une session.\n\n# Production \n\nLe passage en production nécessite **la configuration du token API du client final**.\n\nLa génération du token pour le client final est actuellement manuelle et sera bientôt automatique (par API depuis votre solution).\n\nPour activer le compte du client final, merci de transmettre au support les informations suivantes :\n- Nom de l'entreprise / Matricule Fiscale\n- Nom et prénom du responsable côté entreprise\n- L'adresse émail de son compte.\n\nLe responsable recevra un émail pour valider son compte et générer son token API.\n\n# Support\nPour obtenir de l'aide, contactez [support@ngsign.com](mailto:support@ngsign.com).\n",
+        "version": "2.37"
+    },
+    "servers": [
+        {
+            "url": "https://sandbox.ng-sign.com"
+        }
+    ],
+    "tags": [
+        {
+            "name": "El Fatoora API",
+            "description": "Les services suivants sont destinés aux systèmes qui génèrent déjà des documents XML conformes TEIF indépendamment et utiliseront NGSign pour <b>signer et transmettre le XML signé à TTN.</b>\n"
+        }
+    ],
+    "paths": {
+        "/protected/invoice/xml/v2/transaction/seal": {
+            "post": {
+                "summary": "Aplliquer un cachet serveur sur le XML reçu et transmettre le XML signé à TTN / Aucune manipulation sur le PDF.",
+                "description": "Créer une transaction et signer en utilisant un cachet (traitement automatique). Ce service n'applique pas le traitement post-signature sur le PDF (l'apposition du QRCOde et l'identifiant unique sur le PDF est à la charge de l'application appelante).",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NGXMLAdvancedInvoiceUpload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction créée et signée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response_NGXMLInvoiceTransaction"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        },
+        "/protected/invoice/xml/transaction/seal": {
+            "post": {
+                "summary": "Aplliquer un cachet serveur sur le XML reçu et transmettre le XML signé à TTN / Traitement du PDF de la facture.",
+                "description": "Créer une transaction et signer en utilisant un cachet (traitement automatique). Ce service extrait également le QRCode et l'identifiant unique pour les ajouter sur la facture PDF.",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NGXMLAdvancedInvoiceUpload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Transaction créée et signée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response_NGXMLInvoiceTransaction"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        },
+        "/protected/invoice/xml/check/{uuid}": {
+            "post": {
+                "summary": "Vérifier le statut de la facture",
+                "description": "Vérifier le statut de la facture envoyée à TTN.",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Statut de la facture retourné",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response_NGXMLInvoice"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        },
+        "/protected/invoice/xml/pdf/{uuid}": {
+            "get": {
+                "summary": "Télécharger la facture PDF",
+                "description": "Obtenir la représentation PDF de la facture.",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF retourné",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response_ByteArray"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        },
+        "/protected/invoice/xml/download/html/{uuid}": {
+            "post": {
+                "summary": "Télécharger la facture HTML",
+                "description": "Obtenir la représentation HTML de la facture.",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "HTML retourné",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        },
+        "/protected/invoice/xml/xml/{uuid}": {
+            "get": {
+                "summary": "Télécharger la facture XML",
+                "description": "Obtenir le contenu XML de la facture.",
+                "tags": [
+                    "El Fatoora API"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "uuid",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "XML retourné",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response_ByteArray"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Entrée ou requête invalide"
+                    },
+                    "401": {
+                        "description": "Non autorisé"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "Response_NGXMLInvoiceTransaction": {
+                "type": "object",
+                "properties": {
+                    "object": {
+                        "$ref": "#/components/schemas/NGXMLInvoiceTransaction"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "NGXMLAdvancedInvoiceUpload": {
+                "type": "object",
+                "description": "Structure utilisée pour le téléchargement avancé de factures avec signataire et phrase de passe optionnelle pour le cachet.",
+                "properties": {
+                    "invoices": {
+                        "type": "array",
+                        "description": "Liste des factures à traiter.",
+                        "items": {
+                            "$ref": "#/components/schemas/NGXMLInvoiceUpload"
+                        }
+                    },
+                    "signerEmail": {
+                        "type": "string",
+                        "description": "Email du signataire (doit faire partie de l'organisation)."
+                    },
+                    "passphrase": {
+                        "type": "string",
+                        "description": "Phrase de passe pour le cachet électronique (optionnel)."
+                    },
+                    "ccEmail": {
+                        "type": "string",
+                        "description": "Adresse email en copie (optionnel)."
+                    }
+                }
+            },
+            "Response_ByteArray": {
+                "type": "object",
+                "properties": {
+                    "object": {
+                        "type": "string",
+                        "format": "byte"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Response_Void": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Response_NGXMLInvoice": {
+                "type": "object",
+                "properties": {
+                    "object": {
+                        "$ref": "#/components/schemas/NGXMLInvoice"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "errorCode": {
+                        "type": "integer"
+                    },
+                    "ccEmail": {
+                        "type": "string"
+                    }
+                }
+            },
+            "NGXMLCreationInvoiceUpload": {
+                "type": "object",
+                "description": "Structure pour la création d'un téléchargement de facture.",
+                "properties": {
+                    "invoices": {
+                        "type": "array",
+                        "description": "Liste des factures à télécharger.",
+                        "items": {
+                            "$ref": "#/components/schemas/NGXMLInvoiceUpload"
+                        }
+                    },
+                    "signerEmail": {
+                        "type": "string",
+                        "description": "Email du signataire. Si null, le créateur est supposé être le signataire."
+                    }
+                }
+            },
+            "NGXMLInvoiceUpload": {
+                "type": "object",
+                "description": "Structure représentant une facture à télécharger.",
+                "properties": {
+                    "invoiceFileB64": {
+                        "type": "string",
+                        "description": "Contenu du fichier PDF encodé en Base64."
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/InvoiceConfiguration"
+                    },
+                    "invoiceTIEF": {
+                        "type": "string",
+                        "description": "Contenu XML TEIF encodé en Base64."
+                    },
+                    "clientEmail": {
+                        "type": "string",
+                        "description": "Email du client."
+                    },
+                    "callbackUrl": {
+                        "$ref": "#/components/schemas/NGCallbackUrl"
+                    },
+                    "invoiceNumber": {
+                        "type": "string",
+                        "description": "Numéro de facture."
+                    }
+                }
+            },
+            "NGXMLInvoiceTransaction": {
+                "type": "object",
+                "description": "Représente une transaction de facture XML contenant plusieurs factures.",
+                "properties": {
+                    "uuid": {
+                        "type": "string",
+                        "description": "Identifiant unique de la transaction."
+                    },
+                    "invoices": {
+                        "type": "array",
+                        "description": "Liste des factures dans la transaction.",
+                        "items": {
+                            "$ref": "#/components/schemas/NGXMLInvoice"
+                        }
+                    },
+                    "creationDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date de création."
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Statut actuel de la transaction."
+                    },
+                    "digestAlgo": {
+                        "type": "string",
+                        "description": "Algorithme de digest utilisé."
+                    },
+                    "signingTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Heure de signature."
+                    },
+                    "creator": {
+                        "$ref": "#/components/schemas/NGUser"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/NGUser"
+                    },
+                    "organization": {
+                        "$ref": "#/components/schemas/NGLimitedOrganization"
+                    },
+                    "deleterId": {
+                        "$ref": "#/components/schemas/NGUser"
+                    },
+                    "deleteDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date de suppression."
+                    },
+                    "deleted": {
+                        "type": "boolean",
+                        "description": "Si la transaction est supprimée."
+                    },
+                    "locked": {
+                        "type": "boolean",
+                        "description": "Si la transaction est verrouillée."
+                    },
+                    "bySeal": {
+                        "type": "boolean",
+                        "description": "Signé par cachet électronique."
+                    },
+                    "bySealV2": {
+                        "type": "boolean",
+                        "description": "Signé par cachet V2 (sans PDF)."
+                    },
+                    "wsOnlyCreation": {
+                        "type": "boolean",
+                        "description": "Créé via Web Service uniquement."
+                    }
+                }
+            },
+            "NGXMLInvoice": {
+                "type": "object",
+                "description": "Représente une facture XML avec son statut et ses détails.",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "description": "Statut de la facture."
+                    },
+                    "uuid": {
+                        "type": "string",
+                        "description": "Identifiant unique de la facture."
+                    },
+                    "clientEmail": {
+                        "type": "string",
+                        "description": "Email du client."
+                    },
+                    "ttnReference": {
+                        "type": "string",
+                        "description": "Référence générée par TTN."
+                    },
+                    "ttnErrorMessage": {
+                        "type": "string",
+                        "description": "Message d'erreur de TTN (si existant)."
+                    },
+                    "invoiceNumber": {
+                        "type": "string",
+                        "description": "Numéro de facture."
+                    },
+                    "invoiceDate": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Date de la facture."
+                    },
+                    "withPDF": {
+                        "type": "boolean",
+                        "description": "Si un PDF a été fourni."
+                    },
+                    "twoDocImage": {
+                        "type": "string",
+                        "format": "byte",
+                        "description": "Image 2D-Doc (base64)."
+                    },
+                    "callbackUrl": {
+                        "$ref": "#/components/schemas/NGCallbackUrl"
+                    },
+                    "fileSize": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Taille du fichier en octets."
+                    }
+                }
+            },
+            "InvoiceConfiguration": {
+                "type": "object",
+                "description": "Configuration pour le positionnement du QR et du libellé de la facture",
+                "properties": {
+                    "qrPositionX": {
+                        "type": "integer"
+                    },
+                    "qrPositionY": {
+                        "type": "integer"
+                    },
+                    "qrPositionP": {
+                        "type": "integer"
+                    },
+                    "labelPositionX": {
+                        "type": "integer"
+                    },
+                    "labelPositionY": {
+                        "type": "integer"
+                    },
+                    "labelPositionP": {
+                        "type": "integer"
+                    },
+                    "qrRatio": {
+                        "type": "number",
+                        "format": "float",
+                        "default": 0.5
+                    },
+                    "textPositionX": {
+                        "type": "integer"
+                    },
+                    "textPositionY": {
+                        "type": "integer"
+                    },
+                    "textPage": {
+                        "type": "integer"
+                    },
+                    "allPages": {
+                        "type": "boolean",
+                        "default": false
+                    }
+                }
+            },
+            "NGCallbackUrl": {
+                "type": "object",
+                "description": "Callback URL configuration",
+                "properties": {
+                    "successUrl": {
+                        "type": "string"
+                    },
+                    "failureUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "NGUser": {
+                "type": "object",
+                "description": "User information",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": true
+            },
+            "NGLimitedOrganization": {
+                "type": "object",
+                "description": "Organization information",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "additionalProperties": true
+            }
+        }
+    }
+}

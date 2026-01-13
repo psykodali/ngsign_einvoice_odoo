@@ -26,21 +26,44 @@
                                         <label for="ngsign_bearer_token" class="col-3 o_light_label"/>
                                         <field name="ngsign_bearer_token" class="col-9"/>
                                     </div>
-                                    <div class="row mt8">
-                                        <label for="ngsign_passphrase" class="col-3 o_light_label"/>
-                                        <field name="ngsign_passphrase" class="col-9"/>
+                                    
+                                    <!-- Certificate Type Selection -->
+                                    <div class="row mt16">
+                                        <label for="ngsign_certificate_type" class="col-3 o_light_label" string="Certificate Type"/>
+                                        <field name="ngsign_certificate_type" widget="radio" class="col-9"/>
                                     </div>
-
+                                    
+                                    <!-- SEAL-specific fields -->
+                                    <div class="row mt8" invisible="ngsign_certificate_type != 'seal'">
+                                        <label for="ngsign_passphrase" class="col-3 o_light_label"/>
+                                        <field name="ngsign_passphrase" class="col-9" required="ngsign_certificate_type == 'seal'"/>
+                                    </div>
+                                    <div class="row mt8" invisible="ngsign_certificate_type != 'seal'">
+                                        <label for="ngsign_use_v2_endpoint" class="col-3 o_light_label"/>
+                                        <field name="ngsign_use_v2_endpoint" class="col-9"/>
+                                    </div>
+                                    
+                                    <!-- DigiGO/SSCD-specific fields -->
+                                    <div class="row mt8" invisible="ngsign_certificate_type == 'seal'">
+                                        <label for="ngsign_pds_base_url" class="col-3 o_light_label"/>
+                                        <field name="ngsign_pds_base_url" class="col-9"/>
+                                    </div>
+                                    
+                                    <!-- Common fields -->
+                                    <div class="row mt8">
+                                        <label for="ngsign_signer_email" class="col-3 o_light_label"/>
+                                        <field name="ngsign_signer_email" class="col-9"/>
+                                    </div>
                                     <div class="row mt8">
                                         <label for="ngsign_notify_owner_default" class="col-3 o_light_label"/>
                                         <field name="ngsign_notify_owner_default" class="col-9"/>
                                     </div>
                                     
-                                    <div class="row mt16">
+                                    <div class="row mt16" invisible="ngsign_certificate_type != 'seal'">
                                         <button name="action_open_ttn_layout_settings" string="BETA: Builtin (Seal V2) PDF generation Layout" type="object" class="oe_link" icon="fa-th-large"/>
                                     </div>
                                     <div class="row mt16">
-                                        <button name="action_open_template_settings" string="NGSIGN (Seal V1) PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
+                                        <button name="action_open_template_settings" string="NGSIGN PDF generation Layout" type="object" class="oe_link" icon="fa-arrow-right"/>
                                     </div>
                                     <div class="row mt16">
                                         <button name="action_open_developer_settings" string="Developer Options" type="object" class="oe_link" icon="fa-cogs"/>

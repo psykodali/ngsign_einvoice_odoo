@@ -118,3 +118,42 @@ class NGSignClient:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
+
+    def create_transaction_advanced(self, invoices_payload, signer_email=None, cc_email=None):
+        """
+        Create an advanced transaction with optional delegated signer.
+        This creates a transaction for DigiGO/SSCD that requires user interaction via PDS.
+        
+        Endpoint: POST /protected/invoice/v2/transaction/advanced
+        
+        :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
+        :param signer_email: Email of the delegated signer (optional)
+        :param cc_email: Email to CC the final PDF (optional)
+        :return: Response with transaction UUID and details
+        """
+        url = f"{self.api_url}/protected/invoice/v2/transaction/advanced"
+        headers = self._get_headers()
+        
+        payload = {
+            'invoices': invoices_payload
+        }
+        
+        if signer_email:
+            payload['signerEmail'] = signer_email
+        
+        if cc_email:
+            payload['ccEmail'] = cc_email
+        
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+
+    def generate_pds_url(self, transaction_uuid, base_url='https://sandbox.ng-sign.com/pds/#/teif/invoice/'):
+        """
+        Generate the Page de Signature (PDS) URL for a transaction.
+        
+        :param transaction_uuid: UUID of the transaction
+        :param base_url: Base URL for the PDS (default: sandbox)
+        :return: Complete PDS URL
+        """
+        return f"{base_url.rstrip('/')}/{transaction_uuid}"

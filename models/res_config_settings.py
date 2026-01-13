@@ -9,10 +9,29 @@ class ResConfigSettings(models.TransientModel):
     ngsign_api_einvoice_url = fields.Char(string='NGSign API URL', config_parameter='ngsign.api_einvoice_url', default='https://ngsign.app')
     ngsign_enable_debug_button = fields.Boolean(string='Developer options', config_parameter='ngsign.enable_debug_button', help='Show "Generate Debug JSON" button on invoices')
     ngsign_bearer_token = fields.Char(string='Bearer Token', config_parameter='ngsign.bearer_token')
-    ngsign_passphrase = fields.Char(string='SEAL Passphrase', config_parameter='ngsign.passphrase', help='Passphrase for the SEAL certificate')
-    ngsign_signer_email = fields.Char(string='Signer Email', config_parameter='ngsign.signer_email', help='Email of the delegated signer (optional)')
-    ngsign_notify_owner_default = fields.Boolean(string='Notify Owner Default', config_parameter='ngsign.notify_owner_default', default=True, help='Default value for "Notify Owner" on invoices')
-    ngsign_use_v2_endpoint = fields.Boolean(string='Use V2 Seal Endpoint', config_parameter='ngsign.use_v2_endpoint', help='Use V2 endpoint (no PDF upload, local stamping)')
+    
+    # Certificate Type Configuration
+    ngsign_certificate_type = fields.Selection([
+        ('seal', 'SEAL (Automatic Signing)'),
+        ('digigo', 'DigiGO (User Signature)'),
+        ('sscd', 'SSCD (USB Token)')
+    ], string='Certificate Type', config_parameter='ngsign.certificate_type', default='seal',
+       help='Select the type of certificate to use for signing invoices:\n'
+            '- SEAL: Automatic server-side signing with passphrase\n'
+            '- DigiGO: Personal digital certificate requiring user authentication\n'
+            '- SSCD: Secure Signature Creation Device (USB token)')
+    
+    ngsign_passphrase = fields.Char(string='SEAL Passphrase', config_parameter='ngsign.passphrase', 
+                                     help='Passphrase for the SEAL certificate (required only for SEAL type)')
+    ngsign_signer_email = fields.Char(string='Signer Email', config_parameter='ngsign.signer_email', 
+                                       help='Email of the delegated signer (optional)')
+    ngsign_notify_owner_default = fields.Boolean(string='Notify Owner Default', config_parameter='ngsign.notify_owner_default', default=True, 
+                                                  help='Default value for "Notify Owner" on invoices')
+    ngsign_use_v2_endpoint = fields.Boolean(string='Use V2 Seal Endpoint', config_parameter='ngsign.use_v2_endpoint', 
+                                             help='Use V2 endpoint (no PDF upload, local stamping) - Only for SEAL certificates')
+    ngsign_pds_base_url = fields.Char(string='PDS Base URL', config_parameter='ngsign.pds_base_url', 
+                                       default='https://sandbox.ng-sign.com/pdsv2/#/invoice/',
+                                       help='Base URL for the Page de Signature (PDS) - Used for DigiGO and SSCD certificates')
 
     def set_values(self):
         super(ResConfigSettings, self).set_values()
@@ -21,15 +40,17 @@ class ResConfigSettings(models.TransientModel):
         # Explicitly save to ensure it works and log it
         param.set_param('ngsign.api_einvoice_url', self.ngsign_api_einvoice_url or '')
         param.set_param('ngsign.bearer_token', self.ngsign_bearer_token or '')
+        param.set_param('ngsign.certificate_type', self.ngsign_certificate_type or 'seal')
         param.set_param('ngsign.passphrase', self.ngsign_passphrase or '')
         param.set_param('ngsign.signer_email', self.ngsign_signer_email or '')
         param.set_param('ngsign.notify_owner_default', str(self.ngsign_notify_owner_default))
         param.set_param('ngsign.use_v2_endpoint', str(self.ngsign_use_v2_endpoint))
+        param.set_param('ngsign.pds_base_url', self.ngsign_pds_base_url or 'https://sandbox.ng-sign.com/pdsv2/#/invoice/')
         
         # Log what we are saving
         import logging
         _logger = logging.getLogger(__name__)
-        _logger.info(f"NGSign Settings Saved: URL={self.ngsign_api_einvoice_url}, TokenLen={len(self.ngsign_bearer_token) if self.ngsign_bearer_token else 0}")
+        _logger.info(f"NGSign Settings Saved: URL={self.ngsign_api_einvoice_url}, CertType={self.ngsign_certificate_type}, TokenLen={len(self.ngsign_bearer_token) if self.ngsign_bearer_token else 0}")
 
     @api.model
     def get_values(self):
@@ -39,10 +60,12 @@ class ResConfigSettings(models.TransientModel):
         res.update(
             ngsign_api_einvoice_url=param.get_param('ngsign.api_einvoice_url', default='https://ngsign.app'),
             ngsign_bearer_token=param.get_param('ngsign.bearer_token'),
+            ngsign_certificate_type=param.get_param('ngsign.certificate_type', default='seal'),
             ngsign_passphrase=param.get_param('ngsign.passphrase'),
             ngsign_signer_email=param.get_param('ngsign.signer_email'),
             ngsign_notify_owner_default=param.get_param('ngsign.notify_owner_default', 'True') == 'True',
             ngsign_use_v2_endpoint=param.get_param('ngsign.use_v2_endpoint', 'False') == 'True',
+            ngsign_pds_base_url=param.get_param('ngsign.pds_base_url', default='https://sandbox.ng-sign.com/pdsv2/#/invoice/'),
         )
         return res
 
