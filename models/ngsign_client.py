@@ -141,14 +141,14 @@ class NGSignClient:
         Create an advanced transaction with optional delegated signer.
         This creates a transaction for DigiGO/SSCD that requires user interaction via PDS.
         
-        Endpoint: POST /protected/invoice/xml/transaction/advanced
+        Endpoint: POST /protected/invoice/transaction/advanced
         
         :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
         :param signer_email: Email of the delegated signer (optional)
         :param cc_email: Email to CC the final PDF (optional)
         :return: Response with transaction UUID and details
         """
-        url = f"{self.api_url}/protected/invoice/xml/transaction/advanced"
+        url = f"{self.api_url}/protected/invoice/transaction/advanced"
         headers = self._get_headers()
         
         payload = {
