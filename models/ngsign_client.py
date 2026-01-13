@@ -129,7 +129,7 @@ class NGSignClient:
         :param invoices_payload: List of invoice objects (NGXMLInvoiceUpload)
         :return: Response with transaction UUID and details
         """
-        url = f"{self.api_url}/protected/invoice/xml/transaction"
+        url = f"{self.api_url}/protected/invoice/transaction/advanced/"
         headers = self._get_headers()
         
         response = requests.post(url, headers=headers, json=invoices_payload)
