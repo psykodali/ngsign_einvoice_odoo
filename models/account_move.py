@@ -660,6 +660,10 @@ class AccountMove(models.Model):
                     raise UserError(_("Unexpected response from NGSign API: %s") % str(response))
 
                 response_data = response.get('object', {})
+                if not isinstance(response_data, dict):
+                    msg = response.get('message', str(response_data))
+                    raise UserError(_("NGSign API Error: %s") % msg)
+
                 transaction_uuid = response_data.get('uuid')
                 pds_base_url = params.get_param('ngsign.pds_base_url', 'https://sandbox.ng-sign.com/pds/#/teif/invoice/')
                 pds_url = client.generate_pds_url(transaction_uuid, pds_base_url)
@@ -673,6 +677,10 @@ class AccountMove(models.Model):
                  raise UserError(_("Unexpected response from NGSign API (Global Check): %s - Type: %s") % (str(response), type(response)))
             
             response_data = response.get('object', {})
+            if not isinstance(response_data, dict):
+                 msg = response.get('message', str(response_data))
+                 raise UserError(_("NGSign API Error: %s") % msg)
+
             transaction_uuid = response_data.get('uuid')
             invoices_data = response_data.get('invoices', [])
             
