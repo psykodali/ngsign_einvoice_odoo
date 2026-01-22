@@ -40,7 +40,7 @@ class AccountMove(models.Model):
         Delete NGSign transaction details and attachments if in TEST mode.
         """
         self.ensure_one()
-        if self.ngsign_ttn_mode != 'test':
+        if self.ngsign_ttn_mode == 'prod':
              raise UserError(_("You can only delete transactions signed in TEST mode."))
         
         # Clear NGSign fields
