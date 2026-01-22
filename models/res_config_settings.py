@@ -11,6 +11,14 @@ class ResConfigSettings(models.TransientModel):
     ngsign_bearer_token = fields.Char(string='Bearer Token', config_parameter='ngsign.bearer_token')
     
     # Certificate Type Configuration
+    ngsign_ttn_mode = fields.Selection([
+        ('test', 'TEST'),
+        ('prod', 'PROD')
+    ], string='TTN MODE', config_parameter='ngsign.ttn_mode', default='test', required=True,
+       help='Select the mode for NGSign TTN integration:\n'
+            '- TEST: Invoices are signed in test mode and can be reset.\n'
+            '- PROD: Production mode, transactions are final.')
+
     ngsign_certificate_type = fields.Selection([
         ('seal', 'SEAL (Automatic Signing)'),
         ('digigo', 'DigiGO (User Signature)'),
@@ -50,7 +58,7 @@ class ResConfigSettings(models.TransientModel):
         # Log what we are saving
         import logging
         _logger = logging.getLogger(__name__)
-        _logger.info(f"NGSign Settings Saved: URL={self.ngsign_api_einvoice_url}, CertType={self.ngsign_certificate_type}, TokenLen={len(self.ngsign_bearer_token) if self.ngsign_bearer_token else 0}")
+        _logger.info(f"NGSign Settings Saved: URL={self.ngsign_api_einvoice_url}, Mode={self.ngsign_ttn_mode}, CertType={self.ngsign_certificate_type}, TokenLen={len(self.ngsign_bearer_token) if self.ngsign_bearer_token else 0}")
 
     @api.model
     def get_values(self):
@@ -60,6 +68,7 @@ class ResConfigSettings(models.TransientModel):
         res.update(
             ngsign_api_einvoice_url=param.get_param('ngsign.api_einvoice_url', default='https://ngsign.app'),
             ngsign_bearer_token=param.get_param('ngsign.bearer_token'),
+            ngsign_ttn_mode=param.get_param('ngsign.ttn_mode', default='test'),
             ngsign_certificate_type=param.get_param('ngsign.certificate_type', default='seal'),
             ngsign_passphrase=param.get_param('ngsign.passphrase'),
             ngsign_signer_email=param.get_param('ngsign.signer_email'),

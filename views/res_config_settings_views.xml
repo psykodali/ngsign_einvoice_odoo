@@ -29,6 +29,12 @@
                                     
                                     <!-- Certificate Type Selection -->
                                     <div class="row mt16">
+                                        <label for="ngsign_ttn_mode" class="col-3 o_light_label" string="TTN MODE"/>
+                                        <field name="ngsign_ttn_mode" widget="radio" class="col-9"/>
+                                    </div>
+                                    
+                                    <!-- Certificate Type Selection -->
+                                    <div class="row mt16">
                                         <label for="ngsign_certificate_type" class="col-3 o_light_label" string="Certificate Type"/>
                                         <field name="ngsign_certificate_type" widget="radio" class="col-9"/>
                                     </div>
