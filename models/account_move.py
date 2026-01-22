@@ -30,6 +30,48 @@ class AccountMove(models.Model):
     
     ngsign_notify_owner = fields.Boolean(string='Notify Owner', default=lambda self: self.env['ir.config_parameter'].sudo().get_param('ngsign.notify_owner_default', 'True') == 'True', copy=False)
     ngsign_last_check = fields.Datetime(string='Last NGSign Check', copy=False)
+    ngsign_ttn_mode = fields.Selection([
+        ('test', 'TEST'),
+        ('prod', 'PROD')
+    ], string='TTN Mode', copy=False, help="Mode used when signing this invoice")
+
+    def action_delete_test_transaction(self):
+        """
+        Delete NGSign transaction details and attachments if in TEST mode.
+        """
+        self.ensure_one()
+        if self.ngsign_ttn_mode == 'prod':
+             raise UserError(_("You can only delete transactions signed in TEST mode."))
+        
+        # Clear NGSign fields
+        self.write({
+            'ngsign_transaction_uuid': False,
+            'ngsign_invoice_uuid': False,
+            'ngsign_ttn_reference': False,
+            'ngsign_ttn_qr_code': False,
+            'ngsign_pds_url': False,
+            'ngsign_status': 'draft',
+            'ngsign_last_check': False,
+            'ngsign_ttn_mode': False,
+        })
+        
+        # Delete related attachments
+        attachment_names = [
+            f"{self.name}_signed.pdf",
+            f"{self.name}_signed.xml",
+            f"{self.name}_ngsign_prepare.pdf"
+        ]
+        
+        attachments = self.env['ir.attachment'].search([
+            ('res_model', '=', 'account.move'),
+            ('res_id', '=', self.id),
+            ('name', 'in', attachment_names)
+        ])
+        
+        if attachments:
+            attachments.unlink()
+            
+        return True
 
     def read(self, fields=None, load='_classic_read'):
         """
@@ -601,6 +643,9 @@ class AccountMove(models.Model):
             passphrase = params.get_param('ngsign.passphrase')
             if not passphrase:
                 raise UserError(_("SEAL Passphrase is missing in Settings."))
+        
+        # Get TTN Mode
+        ttn_mode = params.get_param('ngsign.ttn_mode', 'test')
 
         try:
             invoices_payload = []
@@ -697,7 +742,8 @@ class AccountMove(models.Model):
                     write_vals = {
                         'ngsign_transaction_uuid': transaction_uuid,
                         'ngsign_invoice_uuid': matched_inv.get('uuid'),
-                        'ngsign_status': target_status
+                        'ngsign_status': target_status,
+                        'ngsign_ttn_mode': ttn_mode
                     }
                     
                     if pds_url:

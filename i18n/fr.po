@@ -295,3 +295,13 @@ msgstr "Envoi des e-facture(s) pour signature"
 #, python-format
 msgid "Process completed successfully."
 msgstr "Processus terminé avec succès."
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Delete eInvoice Test"
+msgstr "Supprimer e-Facture Test"
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Are you sure you want to delete this test transaction? This will remove all NGSign data and signed files."
+msgstr "Êtes-vous sûr de vouloir supprimer cette transaction de test ? Cela supprimera toutes les données NGSign et les fichiers signés."
