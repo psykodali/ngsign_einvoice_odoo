@@ -22,7 +22,7 @@
                         help="Open the Page de Signature to complete signing with your DigiGO or SSCD certificate"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status in ('draft', 'CANCELLED', 'TTN Signed')"/>
-                <button name="action_delete_test_transaction" string="Delete test transaction" type="object"
+                <button name="action_delete_test_transaction" string="Delete eInvoice Test" type="object"
                         invisible="ngsign_ttn_mode != 'test' or ngsign_status == 'draft'"
                         confirm="Are you sure you want to delete this test transaction? This will remove all NGSign data and signed files."/>
                 <button name="action_generate_debug_json" string="Generate Debug JSON" type="object"
