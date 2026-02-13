@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 18.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-25 22:00+0000\n"
-"PO-Revision-Date: 2025-12-25 22:00+0000\n"
+"POT-Creation-Date: 2026-02-13 10:38+0100\n"
+"PO-Revision-Date: 2026-02-13 10:38+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -287,4 +287,198 @@ msgstr ""
 #: code:addons/ngsign_einvoice_odoo/static/src/js/ngsign_action.js:0
 #, python-format
 msgid "Process completed successfully."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "You can only delete transactions signed in TEST mode."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner VAT/Tax ID is required"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner VAT/Tax ID exceeds 35 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner Name is required"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner Name exceeds 200 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner Address (description) is required"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Partner Address (description) exceeds 500 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Street exceeds 35 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• City Name exceeds 35 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Postal Code exceeds 17 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "• Country Code exceeds 6 characters (current: %d)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Cannot generate e-invoice for %s.\\n\\nThe following partner information is missing or invalid:\\n\\n%s\\n\\nPlease update the partner information and try again."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "NGSign API Error: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Unexpected response from NGSign API: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Unexpected response from NGSign API (Global Check): %s - Type: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "No PDS URL found. Please sign the invoice first."
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#. odoo-python
+#: code:addons/ngsign_einvoice_odoo/models/account_move.py:0
+#, python-format
+msgid "Invoice signed but failed to download files: %s"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Open Signing Page"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_move_form_inherit_ngsign
+msgid "Open the Page de Signature to complete signing with your DigiGO or SSCD certificate"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_ttn_mode
+msgid "TTN MODE"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_certificate_type
+msgid "Certificate Type"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_use_v2_endpoint
+msgid "Use V2 Seal Endpoint"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_pds_base_url
+msgid "PDS Base URL"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields,field_description:ngsign_einvoice_odoo.field_res_config_settings__ngsign_signer_email
+msgid "Signer Email"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__res_config_settings__ngsign_certificate_type__seal
+msgid "SEAL (Automatic Signing)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__res_config_settings__ngsign_certificate_type__digigo
+msgid "DigiGO (User Signature)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__res_config_settings__ngsign_certificate_type__sscd
+msgid "SSCD (USB Token)"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__res_config_settings__ngsign_ttn_mode__test
+msgid "TEST"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model:ir.model.fields.selection,name:ngsign_einvoice_odoo.selection__res_config_settings__ngsign_ttn_mode__prod
+msgid "PROD"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "BETA: Builtin (Seal V2) PDF generation Layout"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.res_config_settings_view_form
+msgid "NGSIGN PDF generation Layout"
+msgstr ""
+
+#. module: ngsign_einvoice_odoo
+#: model_terms:ir.ui.view,arch_db:ngsign_einvoice_odoo.view_partner_form_ngsign
+msgid "NGSign"
 msgstr ""
