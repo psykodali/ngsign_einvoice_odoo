@@ -530,7 +530,7 @@ class AccountMove(models.Model):
             
             'clientDetails': {
                 'partnerIdentifier': partner_vat, # Customer Tax ID
-                'partnerName': self.partner_id.name,
+                'partnerName': self.partner_id.parent_id.name if self.partner_id.parent_id else self.partner_id.name,
                 'address': {
                     'description': self.partner_id.contact_address.replace('\n', ' ') if self.partner_id.contact_address else '',
                     'street': self.partner_id.street,
@@ -580,6 +580,62 @@ class AccountMove(models.Model):
             invoice_upload['invoiceFileB64'] = pdf_base64
         
         return invoice_upload
+
+    def _validate_partner_data_for_ngsign(self):
+        """
+        Validate partner data against NGSign e-invoice requirements.
+        Raises UserError with detailed messages if validation fails.
+        """
+        self.ensure_one()
+        
+        errors = []
+        partner = self.partner_id
+        
+        # Get the partner name (parent if exists, otherwise own name)
+        partner_name = partner.parent_id.name if partner.parent_id else partner.name
+        
+        # Clean VAT (strip country code)
+        partner_vat = (partner.vat or '').upper().replace('TN', '').strip()
+        
+        # 1. Validate partnerIdentifier (VAT)
+        if not partner_vat:
+            errors.append(_("• Partner VAT/Tax ID is required"))
+        elif len(partner_vat) > 35:
+            errors.append(_("• Partner VAT/Tax ID exceeds 35 characters (current: %d)") % len(partner_vat))
+        
+        # 2. Validate partnerName
+        if not partner_name:
+            errors.append(_("• Partner Name is required"))
+        elif len(partner_name) > 200:
+            errors.append(_("• Partner Name exceeds 200 characters (current: %d)") % len(partner_name))
+        
+        # 3. Validate address.description (contact_address)
+        address_description = partner.contact_address.replace('\n', ' ') if partner.contact_address else ''
+        if not address_description:
+            errors.append(_("• Partner Address (description) is required"))
+        elif len(address_description) > 500:
+            errors.append(_("• Partner Address (description) exceeds 500 characters (current: %d)") % len(address_description))
+        
+        # 4. Validate optional address fields (with max lengths)
+        if partner.street and len(partner.street) > 35:
+            errors.append(_("• Street exceeds 35 characters (current: %d)") % len(partner.street))
+        
+        if partner.city and len(partner.city) > 35:
+            errors.append(_("• City Name exceeds 35 characters (current: %d)") % len(partner.city))
+        
+        if partner.zip and len(partner.zip) > 17:
+            errors.append(_("• Postal Code exceeds 17 characters (current: %d)") % len(partner.zip))
+        
+        if partner.country_id and partner.country_id.code and len(partner.country_id.code) > 6:
+            errors.append(_("• Country Code exceeds 6 characters (current: %d)") % len(partner.country_id.code))
+        
+        # If there are errors, raise UserError with all details
+        if errors:
+            error_message = _("Cannot generate e-invoice for %s.\n\nThe following partner information is missing or invalid:\n\n%s\n\nPlease update the partner information and try again.") % (
+                self.name,
+                '\n'.join(errors)
+            )
+            raise UserError(error_message)
 
     def action_ngsign_prepare(self):
         """
@@ -631,6 +687,10 @@ class AccountMove(models.Model):
         # Support bulk signing
         if not self:
             return
+        
+        # Validate partner data for all invoices before proceeding
+        for move in self:
+            move._validate_partner_data_for_ngsign()
             
         client = self._get_ngsign_client()
         params = self.env['ir.config_parameter'].sudo()
