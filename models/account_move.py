@@ -337,8 +337,11 @@ class AccountMove(models.Model):
                     }
                 })
 
+            # Use the first line of the invoice line name to preserve translations/custom names
+            # while stripping the multiline item description from the API payload.
+            item_name = line.name or ''
             items.append({
-                'name': line.name[:500],
+                'name': item_name.split('\n')[0][:500],
                 'code': line.product_id.default_code or 'N/A',
                 'quantity': line.quantity,
                 'unit': (line.product_uom_id.name or 'UNIT')[:7],
