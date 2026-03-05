@@ -16,11 +16,11 @@
     'data': [
         'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
+        'views/ngsign_sign_options_wizard_views.xml',
         'views/account_move_views.xml',
         'views/account_tax_views.xml',
         'views/account_payment_term_views.xml',
         'views/report_invoice.xml',
-        'views/ngsign_sign_options_wizard_views.xml',
         'data/mail_template_data.xml',
         # 'data/ngsign_setup.xml',
         'views/res_partner_views.xml',
