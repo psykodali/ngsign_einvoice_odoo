@@ -17,6 +17,7 @@
         'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
         'views/ngsign_sign_options_wizard_views.xml',
+        'views/ngsign_pds_options_wizard_views.xml',
         'views/account_move_views.xml',
         'views/account_tax_views.xml',
         'views/account_payment_term_views.xml',
