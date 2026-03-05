@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="email_template_ngsign_signature_request" model="mail.template">
+            <field name="name">NGSign eInvoice Signature Request</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="subject">Signature Request for eInvoice {{ object.name }}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px;">
+                    <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                        Hello <t t-out="ctx.get('ngsign_send_to_user_name') or 'User'"/>,
+                        <br/><br/>
+                        You have been requested to sign the eInvoice <strong><t t-out="object.name"/></strong>.
+                        <br/><br/>
+                        Please click the button below to access the NGSign Page de Signature (PDS) and complete the signing process using your DigiGO or SSCD certificate.
+                        <br/><br/>
+                        <div style="margin: 16px 0px 16px 0px;">
+                            <a t-att-href="ctx.get('ngsign_pds_url')"
+                               style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size: 13px;">
+                                Sign eInvoice
+                            </a>
+                        </div>
+                        <br/><br/>
+                        If the button doesn't work, you can copy and paste this URL into your browser:
+                        <br/>
+                        <t t-out="ctx.get('ngsign_pds_url')"/>
+                        <br/><br/>
+                        Thank you,
+                        <br/>
+                        <t t-out="user.signature or ''"/>
+                    </p>
+                </div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    </data>
+</odoo>

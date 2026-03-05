@@ -15,11 +15,19 @@
                 <field name="ngsign_show_transaction_uuid" invisible="1"/>
                 <field name="ngsign_show_invoice_uuid" invisible="1"/>
                 <field name="ngsign_pds_url" invisible="1"/>
+                <field name="ngsign_certificate_type" invisible="1"/>
+                
+                <!-- Button for SEAL certificate type -->
                 <button name="ngsign_einvoice_odoo.action_sign_ngsign_js" string="Sign with NGSign" type="action" class="oe_highlight"
-                        invisible="state != 'posted' or ngsign_status in ('pending', 'pending_signature', 'signed', 'TTN Signed', 'signed_ngsign')"/>
-                <button name="action_open_pds" string="Open Signing Page" type="object" class="oe_highlight"
+                        invisible="ngsign_certificate_type in ('digigo', 'sscd') or state != 'posted' or ngsign_status in ('pending', 'pending_signature', 'signed', 'TTN Signed', 'signed_ngsign')"/>
+                
+                <!-- Button for DigiGO / SSCD certificate types (Opens Wizard) -->
+                <button name="%(ngsign_einvoice_odoo.action_ngsign_sign_options_wizard)d" string="Sign with NGSign" type="action" class="oe_highlight"
+                        invisible="ngsign_certificate_type == 'seal' or state != 'posted' or ngsign_status in ('pending', 'pending_signature', 'signed', 'TTN Signed', 'signed_ngsign')"/>
+                        
+                <button name="%(ngsign_einvoice_odoo.action_ngsign_pds_options_wizard)d" string="Signing Page" type="action" class="oe_highlight"
                         invisible="not ngsign_pds_url or ngsign_status != 'pending_signature'"
-                        help="Open the Page de Signature to complete signing with your DigiGO or SSCD certificate"/>
+                        help="Open the Page de Signature or send it via email"/>
                 <button name="action_check_ngsign_status" string="Check NGSign Status" type="object"
                         invisible="ngsign_status in ('draft', 'CANCELLED', 'TTN Signed')"/>
                 <button name="action_delete_test_transaction" string="Delete eInvoice Test" type="object"
