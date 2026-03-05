@@ -9,3 +9,4 @@ from . import ngsign_developer_settings
 from . import res_company
 from . import base_document_layout
 from . import ngsign_ttn_layout_settings
+from . import ngsign_sign_options_wizard

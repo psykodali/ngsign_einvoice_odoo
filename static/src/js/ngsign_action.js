@@ -22,8 +22,9 @@ async function actionSignNGSignJs(env, action) {
     ui.block({ message: _t("Preparing your eInvoice(s)") });
 
     try {
+        const context = Object.assign({}, action.context || {});
         // Step 1: Prepare (Generate PDFs)
-        await orm.call("account.move", "action_ngsign_prepare", [activeIds]);
+        await orm.call("account.move", "action_ngsign_prepare", [activeIds], { context: context });
 
         // Step 2: Send (Update message and call API)
         // Note: ui.block replaces the message if called again? 
@@ -32,7 +33,7 @@ async function actionSignNGSignJs(env, action) {
         ui.unblock();
         ui.block({ message: _t("Sending eInvoice(s) for signature") });
 
-        const result = await orm.call("account.move", "action_ngsign_send", [activeIds]);
+        const result = await orm.call("account.move", "action_ngsign_send", [activeIds], { context: context });
 
         // Show success notification if needed, or let the backend action handle it (e.g. reload)
         notification.add(_t("Process completed successfully."), { type: "success" });

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ngsign_sign_options_wizard_form" model="ir.ui.view">
+        <field name="name">ngsign.sign.options.wizard.form</field>
+        <field name="model">ngsign.sign.options.wizard</field>
+        <field name="arch" type="xml">
+            <form string="NGSign Signature Options">
+                <!-- If the user cannot sign now, we show a warning -->
+                <div class="alert alert-warning" role="alert" invisible="can_sign_now">
+                    You do not have permission to sign invoices yourself. You can only send them for signature.
+                </div>
+                <group>
+                    <field name="move_id" invisible="1"/>
+                    <field name="can_sign_now" invisible="1"/>
+                    <field name="authorized_user_ids" invisible="1"/>
+                    
+                    <field name="action_type" widget="radio"/>
+                    <field name="authorized_user_id" 
+                           invisible="action_type != 'send'" 
+                           required="action_type == 'send'"
+                           options="{'no_create': True, 'no_open': True}"/>
+                </group>
+                <footer>
+                    <button string="Confirm" type="object" name="action_confirm" class="btn-primary" 
+                            invisible="action_type == 'sign_now' and not can_sign_now"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ngsign_sign_options_wizard" model="ir.actions.act_window">
+        <field name="name">Sign / Send for Signature</field>
+        <field name="res_model">ngsign.sign.options.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

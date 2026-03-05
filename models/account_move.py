@@ -35,6 +35,17 @@ class AccountMove(models.Model):
         ('prod', 'PROD')
     ], string='TTN Mode', copy=False, help="Mode used when signing this invoice")
 
+    ngsign_certificate_type = fields.Selection([
+        ('seal', 'SEAL'),
+        ('digigo', 'DigiGO'),
+        ('sscd', 'SSCD')
+    ], string='Certificate Type', compute='_compute_ngsign_certificate_type')
+
+    def _compute_ngsign_certificate_type(self):
+        cert_type = self.env['ir.config_parameter'].sudo().get_param('ngsign.certificate_type', 'seal')
+        for move in self:
+            move.ngsign_certificate_type = cert_type
+
     def action_delete_test_transaction(self):
         """
         Delete NGSign transaction details and attachments if in TEST mode.
@@ -827,14 +838,40 @@ class AccountMove(models.Model):
                 ])
                 attachments.unlink()
             
-            # For DigiGO/SSCD, return action to open PDS URL
+            # For DigiGO/SSCD, return action to open PDS URL or send email
             _logger.info(f"NGSign: Checking redirection - cert_type={cert_type}, pds_url={pds_url}")
             if cert_type in ('digigo', 'sscd') and pds_url:
-                return {
-                    'type': 'ir.actions.act_url',
-                    'url': pds_url,
-                    'target': 'new',
-                }
+                action_type = self.env.context.get('ngsign_action_type')
+                
+                if action_type == 'send':
+                    # Send email with PDS URL
+                    send_to_user_id = self.env.context.get('ngsign_send_to_user_id')
+                    try:
+                        user = self.env['res.users'].browse(send_to_user_id)
+                        template_id_str = params.get_param('ngsign.email_template_id')
+                        if template_id_str:
+                            template = self.env['mail.template'].browse(int(template_id_str))
+                            if template.exists():
+                                for move in self:
+                                    template.sudo().with_context(
+                                        ngsign_pds_url=move.ngsign_pds_url,
+                                        ngsign_send_to_user_name=user.name
+                                    ).send_mail(move.id, force_send=True, email_values={'email_to': user.email})
+                                _logger.info(f"NGSign: Sent signature request email to {user.email}")
+                            else:
+                                _logger.warning("NGSign: Configured email template does not exist.")
+                        else:
+                            _logger.warning("NGSign: No email template configured for signature requests.")
+                    except Exception as e:
+                        _logger.error(f"NGSign: Failed to send signature email: {e}")
+                    
+                    return True # Do not open URL locally
+                else:
+                    return {
+                        'type': 'ir.actions.act_url',
+                        'url': pds_url,
+                        'target': 'new',
+                    }
                 
         except Exception as e:
             self.write({'ngsign_status': 'error'})

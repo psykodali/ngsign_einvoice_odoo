@@ -54,6 +54,17 @@
                                         <label for="ngsign_pds_base_url" class="col-3 o_light_label"/>
                                         <field name="ngsign_pds_base_url" class="col-9"/>
                                     </div>
+                                    <div class="row mt8" invisible="ngsign_certificate_type == 'seal'">
+                                        <label for="ngsign_email_template_id" class="col-3 o_light_label"/>
+                                        <field name="ngsign_email_template_id" class="col-9" 
+                                               options="{'no_create': True}"/>
+                                    </div>
+                                    <div class="row mt8" invisible="ngsign_certificate_type == 'seal'">
+                                        <label for="ngsign_authorized_users" class="col-3 o_light_label"/>
+                                        <field name="ngsign_authorized_users" class="col-9" widget="many2many_tags" 
+                                               options="{'no_create': True}"/>
+                                    </div>
+
                                     
                                     <!-- Common fields -->
                                     <div class="row mt8">
