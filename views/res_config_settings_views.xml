@@ -68,10 +68,6 @@
                                     
                                     <!-- Common fields -->
                                     <div class="row mt8">
-                                        <label for="ngsign_signer_email" class="col-3 o_light_label"/>
-                                        <field name="ngsign_signer_email" class="col-9"/>
-                                    </div>
-                                    <div class="row mt8">
                                         <label for="ngsign_notify_owner_default" class="col-3 o_light_label"/>
                                         <field name="ngsign_notify_owner_default" class="col-9"/>
                                     </div>

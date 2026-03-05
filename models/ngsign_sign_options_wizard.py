@@ -37,29 +37,27 @@ class NgsignSignOptionsWizard(models.TransientModel):
 
     def action_confirm(self):
         self.ensure_one()
+        context_data = {
+            'ngsign_action_type': self.action_type
+        }
         if self.action_type == 'sign_now':
             if not self.can_sign_now:
                 raise UserError(_("You don't have permission to sign invoices. Please configure authorized users in settings."))
-            
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'ngsign_einvoice_odoo.action_sign_ngsign_js',
-                'context': {
-                    'active_ids': [self.move_id.id],
-                    'ngsign_action_type': 'sign_now'
-                },
-            }
         elif self.action_type == 'send':
             if not self.authorized_user_id:
                 raise UserError(_("Please select a user to send the signature link to."))
-            
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'ngsign_einvoice_odoo.action_sign_ngsign_js',
-                'context': {
-                    'active_ids': [self.move_id.id],
-                    'ngsign_action_type': 'send',
-                    'ngsign_send_to_user_id': self.authorized_user_id.id,
-                    'ngsign_send_to_user_name': self.authorized_user_id.name,
-                },
-            }
+            context_data['ngsign_send_to_user_id'] = self.authorized_user_id.id
+            context_data['ngsign_send_to_user_name'] = self.authorized_user_id.name
+
+        active_ids = self.env.context.get('active_ids') or [self.move_id.id]
+        
+        if self.env.context.get('ngsign_is_debug'):
+            moves = self.env['account.move'].browse(active_ids)
+            return moves.with_context(**context_data).action_generate_debug_json()
+        
+        context_data['active_ids'] = active_ids
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'ngsign_einvoice_odoo.action_sign_ngsign_js',
+            'context': context_data,
+        }

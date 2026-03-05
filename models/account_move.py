@@ -760,8 +760,14 @@ class AccountMove(models.Model):
                 
             else:
                 # DigiGO or SSCD Certificate - Manual signing via PDS
-                signer_email = params.get_param('ngsign.signer_email')
-                
+                action_type = self.env.context.get('ngsign_action_type', 'sign_now')
+                if action_type == 'send':
+                    send_to_user_id = self.env.context.get('ngsign_send_to_user_id')
+                    user = self.env['res.users'].browse(send_to_user_id)
+                    signer_email = user.email
+                else:
+                    signer_email = self.env.user.email
+
                 # Always use advanced endpoint (v2)
                 response = client.create_transaction_advanced(
                     invoices_payload,
@@ -1063,6 +1069,17 @@ class AccountMove(models.Model):
         if not self:
             return
 
+        cert_type = self.env['ir.config_parameter'].sudo().get_param('ngsign.certificate_type', 'seal')
+        if cert_type in ('digigo', 'sscd') and not self.env.context.get('ngsign_action_type'):
+            return {
+                'type': 'ir.actions.act_window',
+                'name': _('Debug JSON Signature Options'),
+                'res_model': 'ngsign.sign.options.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': dict(self.env.context, ngsign_is_debug=True, active_id=self[0].id, active_ids=self.ids)
+            }
+
         try:
             invoices_payload = []
             cc_email = None
@@ -1093,6 +1110,18 @@ class AccountMove(models.Model):
             }
             if cc_email:
                 full_payload['ccEmail'] = cc_email
+
+            if cert_type in ('digigo', 'sscd'):
+                action_type = self.env.context.get('ngsign_action_type', 'sign_now')
+                if action_type == 'send':
+                    send_to_user_id = self.env.context.get('ngsign_send_to_user_id')
+                    if send_to_user_id:
+                        signer_email = self.env['res.users'].browse(send_to_user_id).email
+                    else:
+                        signer_email = self.env.user.email
+                else:
+                    signer_email = self.env.user.email
+                full_payload['signerEmail'] = signer_email
             
             json_data = json.dumps(full_payload, indent=4, default=str, ensure_ascii=False)
             
