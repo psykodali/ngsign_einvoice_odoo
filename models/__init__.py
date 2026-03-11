@@ -11,3 +11,4 @@ from . import base_document_layout
 from . import ngsign_ttn_layout_settings
 from . import ngsign_sign_options_wizard
 from . import ngsign_pds_options_wizard
+from . import ir_actions_report
