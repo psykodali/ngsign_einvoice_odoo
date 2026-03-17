@@ -341,7 +341,7 @@ class AccountMove(models.Model):
                 other_taxes.append({
                     'taxTypeName': {
                         'code': tax.teif_code or 'I-1606', # Default to Autre
-                        'value': str(current_tax_amount) # Value should be the amount
+                        'value': str(round(current_tax_amount, 5)) # Value should be the amount
                     },
                     'taxDetails': {
                         'taxRate': str(tax.amount)
@@ -356,13 +356,13 @@ class AccountMove(models.Model):
                 'code': line.product_id.default_code or 'N/A',
                 'quantity': line.quantity,
                 'unit': (line.product_uom_id.name or 'UNIT')[:7],
-                'unitPrice': line.price_unit,
-                'totalPrice': line.price_subtotal,
-                'tvaRate': vat_rate,
+                'unitPrice': round(line.price_unit, 5),
+                'totalPrice': round(line.price_subtotal, 5),
+                'tvaRate': round(vat_rate, 5),
                 'currencyIdentifier': self.currency_id.name,
                 'taxes': other_taxes,
-                'discountPercentage': line.discount,
-                'discount': (line.quantity * line.price_unit * line.discount) / 100,
+                'discountPercentage': round(line.discount, 5),
+                'discount': round((line.quantity * line.price_unit * line.discount) / 100, 5),
                 'service': line.product_id.type == 'service'
             })
 
@@ -521,8 +521,8 @@ class AccountMove(models.Model):
             global_taxes_list.append({
                 'code': code,
                 'taxRate': rate,
-                'amount': f"{data['amount']:.3f}",
-                'amountBase': f"{data['base']:.3f}"
+                'amount': f"{data['amount']:.5f}",
+                'amountBase': f"{data['base']:.5f}"
             })
 
         # Determine global VAT rate (if uniform)
@@ -557,12 +557,12 @@ class AccountMove(models.Model):
             'items': items,
             'taxes': global_taxes_list,
             
-            'invoiceTotalWithoutTax': self.amount_untaxed,
-            'invoiceTotalWithTax': self.amount_total,
-            'invoiceTotalTax': self.amount_tax,
-            'stampTax': stamp_tax,
-            'tvaRate': global_tva_rate,
-            'tvaTax': total_vat_amount,
+            'invoiceTotalWithoutTax': round(self.amount_untaxed, 5),
+            'invoiceTotalWithTax': round(self.amount_total, 5),
+            'invoiceTotalTax': round(self.amount_tax, 5),
+            'stampTax': round(stamp_tax, 5),
+            'tvaRate': round(global_tva_rate, 5),
+            'tvaTax': round(total_vat_amount, 5),
             'invoiceTotalinLetters': self.currency_id.with_context(lang='fr_FR').amount_to_text(self.amount_total),
             
             'paymentDetails': payment_details
